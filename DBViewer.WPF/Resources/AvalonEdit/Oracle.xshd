@@ -1,0 +1,456 @@
+<?xml version="1.0"?>
+<!-- Shades of Red-Brown: #a31515, #cf4315, #ffb96e, #ffdc95 -->
+<!-- Shades of Bright-Blue: #0077dc #008fe4 #8dbbdc #8de8ff -->
+<SyntaxDefinition name="SQL" extensions=".sql"
+                  xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+
+  <!-- T-SQL Reference: http://msdn.microsoft.com/de-de/library/ms189826%28v=sql.90%29.aspx -->
+  <Color name="Digits"     foreground="DarkBlue" exampleText="3.1415f"/>
+  <Color name="Comment" foreground="Green" exampleText="string text = &quot;Hello, World!&quot;"/>
+  <Color name="Punctuation" foreground="Red" exampleText="string text = &quot;Hello, World!&quot;"/>
+
+  <Color name="String" foreground="Olive" exampleText="string text = &quot;Hello, World!&quot;"/>
+  <Color name="String2" foreground="#993" exampleText="string text = &quot;Hello, World!&quot;"/>
+
+  <Color name="Keyword" fontWeight="bold" foreground="Blue" exampleText="SELECT"/>
+  <Color name="Keyword1" fontWeight="normal" foreground="Blue" exampleText="NOCOUNT"/>
+  <Color name="GoKeyword" fontWeight="bold" foreground="Red" exampleText="GO"/>
+  
+  <Color name="MethodCall" foreground="MidnightBlue" fontWeight="bold" />
+
+  <Color name="Variable" foreground="Red"  exampleText="@Variable" />
+  <Color name="Variable1" foreground="Red" exampleText="@@Variable" />
+
+  <Color name="ObjectReference" foreground="Teal" exampleText="Customer.Name" />
+  <Color name="ObjectReference1" foreground="Teal" exampleText="dbo.Customer.Name" />
+
+  <Color name="ObjectReferenceInBrackets" foreground="Teal" exampleText="[Customer].[Name]" />
+  <Color name="ObjectReferenceInBrackets1" foreground="Teal" exampleText="[dbo].[Customer].[Name]" />
+
+  <Color name="CommentMarkerSetTodo"       foreground="Red"     fontWeight="bold" />
+  <Color name="CommentMarkerSetHackUndone" foreground="#E0E000" fontWeight="bold" />
+
+  <RuleSet name="CommentMarkerSet">
+    <Keywords color="CommentMarkerSetTodo">
+      <Word>TODO</Word>
+      <Word>FIXME</Word>
+    </Keywords>
+    <Keywords color="CommentMarkerSetHackUndone">
+      <Word>HACK</Word>
+      <Word>UNDONE</Word>
+    </Keywords>
+  </RuleSet>
+
+  <RuleSet  ignoreCase="true">
+    <Span color="String" multiline="true" >
+      <Begin>'</Begin>
+      <End>'</End>
+    </Span>
+
+    <Span color="String2" multiline="true"  >
+      <Begin>"</Begin>
+      <End>"</End>
+    </Span>
+
+    <!-- span for escape sequences -->
+    <Span  color="Comment" begin="--" end="\n" ruleSet="CommentMarkerSet"/>
+    <Span color="Comment"  multiline="true" ruleSet="CommentMarkerSet">
+      <Begin>/\*</Begin>
+      <End>\*/</End>
+    </Span>
+
+    <!-- Oracle's "reserved words", which CANNOT be used in custom names. -->
+<Keywords color="Keyword">
+  <Word>access</Word>
+  <Word>add</Word>
+  <Word>all</Word>
+  <Word>alter</Word>
+  <Word>and</Word>
+  <Word>any</Word>
+  <Word>array</Word>
+  <Word>arraylen</Word>
+  <Word>as</Word>
+  <Word>asc</Word>
+  <Word>audit</Word>
+  <Word>authid</Word>
+  <Word>begin</Word>
+  <Word>between</Word>
+  <Word>bfile</Word>
+  <Word>blob</Word>
+  <Word>body</Word>
+  <Word>boolean</Word>
+  <Word>bulk</Word>
+  <Word>bulk_rowcount</Word>
+  <Word>by</Word>
+  <Word>case</Word>
+  <Word>char</Word>
+  <Word>check</Word>
+  <Word>clob</Word>
+  <Word>close</Word>
+  <Word>cluster</Word>
+  <Word>collect</Word>
+  <Word>column</Word>
+  <Word>comment</Word>
+  <Word>commit</Word>
+  <Word>compress</Word>
+  <Word>connect</Word>
+  <Word>constant</Word>
+  <Word>continue</Word>
+  <Word>create</Word>
+  <Word>current</Word>
+  <Word>current_user</Word>
+  <Word>cursor</Word>
+  <Word>date</Word>
+  <Word>day</Word>
+  <Word>decimal</Word>
+  <Word>declare</Word>
+  <Word>default</Word>
+  <Word>definer</Word>
+  <Word>delete</Word>
+  <Word>deleting</Word>
+  <Word>desc</Word>
+  <Word>deterministic</Word>
+  <Word>distinct</Word>
+  <Word>drop</Word>
+  <Word>else</Word>
+  <Word>elsif</Word>
+  <Word>end</Word>
+  <Word>exception</Word>
+  <Word>exceptions</Word>
+  <Word>exclusive</Word>
+  <Word>execute</Word>
+  <Word>exists</Word>
+  <Word>exit</Word>
+  <Word>external</Word>
+  <Word>false</Word>
+  <Word>fetch</Word>
+  <Word>file</Word>
+  <Word>float</Word>
+  <Word>for</Word>
+  <Word>forall</Word>
+  <Word>found</Word>
+  <Word>from</Word>
+  <Word>function</Word>
+  <Word>goto</Word>
+  <Word>grant</Word>
+  <Word>group</Word>
+  <Word>having</Word>
+  <Word>hour</Word>
+  <Word>identified</Word>
+  <Word>if</Word>
+  <Word>immediate</Word>
+  <Word>in</Word>
+  <Word>increment</Word>
+  <Word>index</Word>
+  <Word>indices</Word>
+  <Word>initial</Word>
+  <Word>insert</Word>
+  <Word>inserting</Word>
+  <Word>int</Word>
+  <Word>integer</Word>
+  <Word>intersect</Word>
+  <Word>into</Word>
+  <Word>is</Word>
+  <Word>isopen</Word>
+  <Word>language</Word>
+  <Word>level</Word>
+  <Word>like</Word>
+  <Word>limit</Word>
+  <Word>lock</Word>
+  <Word>long</Word>
+  <Word>long_raw</Word>
+  <Word>loop</Word>
+  <Word>maxextents</Word>
+  <Word>minus</Word>
+  <Word>minute</Word>
+  <Word>mod</Word>
+  <Word>mode</Word>
+  <Word>modify</Word>
+  <Word>month</Word>
+  <Word>name</Word>
+  <Word>nchar</Word>
+  <Word>nclob</Word>
+  <Word>noaudit</Word>
+  <Word>nocompress</Word>
+  <Word>nocopy</Word>
+  <Word>not</Word>
+  <Word>notfound</Word>
+  <Word>nowait</Word>
+  <Word>null</Word>
+  <Word>number</Word>
+  <Word>nvarchar2</Word>
+  <Word>of</Word>
+  <Word>offline</Word>
+  <Word>on</Word>
+  <Word>online</Word>
+  <Word>open</Word>
+  <Word>option</Word>
+  <Word>or</Word>
+  <Word>order</Word>
+  <Word>others</Word>
+  <Word>out</Word>
+  <Word>package</Word>
+  <Word>parallel_enable</Word>
+  <Word>pctfree</Word>
+  <Word>pipelined</Word>
+  <Word>positive</Word>
+  <Word>pragma</Word>
+  <Word>prior</Word>
+  <Word>privileges</Word>
+  <Word>procedure</Word>
+  <Word>public</Word>
+  <Word>raise</Word>
+  <Word>raw</Word>
+  <Word>real</Word>
+  <Word>record</Word>
+  <Word>ref</Word>
+  <Word>rename</Word>
+  <Word>replace</Word>
+  <Word>resource</Word>
+  <Word>result_cache</Word>
+  <Word>return</Word>
+  <Word>returning</Word>
+  <Word>revoke</Word>
+  <Word>rollback</Word>
+  <Word>row</Word>
+  <Word>rowcount</Word>
+  <Word>rowid</Word>
+  <Word>rowlabel</Word>
+  <Word>rownum</Word>
+  <Word>rows</Word>
+  <Word>rowtype</Word>
+  <Word>save</Word>
+  <Word>savepoint</Word>
+  <Word>second</Word>
+  <Word>select</Word>
+  <Word>session</Word>
+  <Word>set</Word>
+  <Word>share</Word>
+  <Word>show</Word>
+  <Word>size</Word>
+  <Word>smallint</Word>
+  <Word>sql</Word>
+  <Word>sqlbuf</Word>
+  <Word>start</Word>
+  <Word>subtype</Word>
+  <Word>successful</Word>
+  <Word>synonym</Word>
+  <Word>sysdate</Word>
+  <Word>table</Word>
+  <Word>then</Word>
+  <Word>timestamp</Word>
+  <Word>timezone_abbr</Word>
+  <Word>timezone_hour</Word>
+  <Word>timezone_minute</Word>
+  <Word>timezone_region</Word>
+  <Word>to</Word>
+  <Word>transaction</Word>
+  <Word>trigger</Word>
+  <Word>true</Word>
+  <Word>uid</Word>
+  <Word>union</Word>
+  <Word>unique</Word>
+  <Word>update</Word>
+  <Word>updating</Word>
+  <Word>urowid</Word>
+  <Word>user</Word>
+  <Word>using</Word>
+  <Word>validate</Word>
+  <Word>values</Word>
+  <Word>varchar</Word>
+  <Word>varchar2</Word>
+  <Word>varray</Word>
+  <Word>varying</Word>
+  <Word>view</Word>
+  <Word>when</Word>
+  <Word>whenever</Word>
+  <Word>where</Word>
+  <Word>while</Word>
+  <Word>with</Word>
+  <Word>year</Word>
+</Keywords>
+
+<!-- Oracle's "keywords", which can be used in custom names. -->
+<Keywords foreground='Blue'>
+  <Word>errors</Word>
+  <Word>exceptions</Word>
+  <Word>found</Word>
+  <Word>indices</Word>
+  <Word>mod</Word>
+  <Word>name</Word>
+  <Word>at</Word>
+  <Word>replace</Word>
+  <Word>rowcount</Word>
+  <Word>save</Word>
+  <Word>show</Word>
+  <Word>type</Word>
+  <Word>a</Word>
+  <Word>automatic</Word>
+  <Word>binary_double</Word>
+  <Word>binary_float</Word>
+  <Word>binary_integer</Word>
+  <Word>block</Word>
+  <Word>both</Word>
+  <Word>breadth</Word>
+  <Word>byte</Word>
+  <Word>cast</Word>
+  <Word>character</Word>
+  <Word>cluster_set</Word>
+  <Word>connect_by_root</Word>
+  <Word>constraint</Word>
+  <Word>count</Word>
+  <Word>cross</Word>
+  <Word>cube</Word>
+  <Word>cursor</Word>
+  <Word>cycle</Word>
+  <Word>dbtimezone</Word>
+  <Word>dec</Word>
+  <Word>decrement</Word>
+  <Word>dense_rank</Word>
+  <Word>depth</Word>
+  <Word>dimension</Word>
+  <Word>double</Word>
+  <Word>empty</Word>
+  <Word>end</Word>
+  <Word>equals_path</Word>
+  <Word>escape</Word>
+  <Word>exclude</Word>
+  <Word>extract</Word>
+  <Word>first</Word>
+  <Word>following</Word>
+  <Word>full</Word>
+  <Word>grouping</Word>
+  <Word>ignore</Word>
+  <Word>include</Word>
+  <Word>infinite</Word>
+  <Word>inner</Word>
+  <Word>interval</Word>
+  <Word>iterate</Word>
+  <Word>join</Word>
+  <Word>keep</Word>
+  <Word>last</Word>
+  <Word>leading</Word>
+  <Word>left</Word>
+  <Word>like2</Word>
+  <Word>like4</Word>
+  <Word>likec</Word>
+  <Word>limit</Word>
+  <Word>listagg</Word>
+  <Word>lnnvl</Word>
+  <Word>local</Word>
+  <Word>locked</Word>
+  <Word>log</Word>
+  <Word>main</Word>
+  <Word>matched</Word>
+  <Word>maxvalue</Word>
+  <Word>measures</Word>
+  <Word>member</Word>
+  <Word>merge</Word>
+  <Word>mivalue</Word>
+  <Word>mlslabel</Word>
+  <Word>model</Word>
+  <Word>multiset</Word>
+  <Word>nan</Word>
+  <Word>national</Word>
+  <Word>natural</Word>
+  <Word>nav</Word>
+  <Word>nocycle</Word>
+  <Word>nulls</Word>
+  <Word>numeric</Word>
+  <Word>nvarchar</Word>
+  <Word>only</Word>
+  <Word>outer</Word>
+  <Word>over</Word>
+  <Word>partition</Word>
+  <Word>percent_rank</Word>
+  <Word>percentile_cont</Word>
+  <Word>percentile_disc</Word>
+  <Word>pivot</Word>
+  <Word>pls_integer</Word>
+  <Word>preceding</Word>
+  <Word>precision</Word>
+  <Word>present</Word>
+  <Word>range</Word>
+  <Word>read</Word>
+  <Word>reference</Word>
+  <Word>regexp_like</Word>
+  <Word>reject</Word>
+  <Word>respect</Word>
+  <Word>return</Word>
+  <Word>returning</Word>
+  <Word>right</Word>
+  <Word>rollup</Word>
+  <Word>rules</Word>
+  <Word>sample</Word>
+  <Word>scn</Word>
+  <Word>search</Word>
+  <Word>seed</Word>
+  <Word>sequential</Word>
+  <Word>sessiontimezone</Word>
+  <Word>sets</Word>
+  <Word>siblings</Word>
+  <Word>single</Word>
+  <Word>skip</Word>
+  <Word>some</Word>
+  <Word>sql</Word>
+  <Word>submultiset</Word>
+  <Word>subpartition</Word>
+  <Word>the</Word>
+  <Word>time</Word>
+  <Word>to</Word>
+  <Word>trailing</Word>
+  <Word>trim</Word>
+  <Word>unbounded</Word>
+  <Word>under_path</Word>
+  <Word>unlimited</Word>
+  <Word>unpivot</Word>
+  <Word>until</Word>
+  <Word>updated</Word>
+  <Word>upsert</Word>
+  <Word>using</Word>
+  <Word>value</Word>
+  <Word>varying</Word>
+  <Word>versions</Word>
+  <Word>wait</Word>
+  <Word>when</Word>
+  <Word>within</Word>
+  <Word>xml</Word>
+  <Word>zone</Word>
+</Keywords>
+
+    <Keywords color="Keyword1">
+      <Word>NOCOUNT</Word>
+    </Keywords>
+
+    <Keywords color="GoKeyword" >
+      <Word>GO</Word>
+    </Keywords>
+
+    <Rule color="ObjectReference1">([\d\w]+)\.([\d\w]+)\.([\d\w]+)</Rule>
+    <Rule color="ObjectReference">([\d\w]+)\.([\d\w]+)</Rule>
+
+    <Rule color="ObjectReferenceInBrackets1">([\d\w]+)\.([\d\w]+)\.([\d\w]+)</Rule>
+    <Rule color="ObjectReferenceInBrackets">\[([\d\w]+)\]\.\[([\d\w]+)\]\.\[([\d\w]+)\]</Rule>
+    <Rule color="ObjectReferenceInBrackets">\[([\d\w]+)\]\.\[([\d\w]+)\]</Rule>
+
+    <Rule color="Punctuation">
+      [?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+
+    </Rule>
+
+    <Rule color="MethodCall">[\d\w_]+(?=(\s*\())</Rule>
+    <Rule color="Variable1">@@([\w]+)</Rule>
+    <Rule color="Variable">@([\w]+)</Rule>
+
+    <!-- Digits -->
+    <Rule color="Digits">
+      \b0[xX][0-9a-fA-F]+  # hex number
+      |
+      (	\b\d+(\.[0-9]+)?   #number with optional floating point
+      |	\.[0-9]+           #or just starting with floating point
+      )
+      ([eE][+-]?[0-9]+)? # optional exponent
+    </Rule>
+
+  </RuleSet>
+
+</SyntaxDefinition>
