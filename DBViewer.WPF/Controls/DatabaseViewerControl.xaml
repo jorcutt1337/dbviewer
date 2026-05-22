@@ -69,7 +69,7 @@
                                                     <DataGridTextColumn Binding="{Binding Rows}" ClipboardContentBinding="{x:Null}" Header="#" Width="12*" IsReadOnly="True" Foreground="#FF114900"/>
                                                 </DataGrid.Columns>
                                                 <DataGrid.DataContext>
-                                                    <Models:DatabaseViewModel/>
+                                                    <Models:SchemaViewModel/>
                                                 </DataGrid.DataContext>
                                             </DataGrid>
 
@@ -110,15 +110,15 @@
                                                     <DataGridTextColumn Binding="{Binding DataType}" ClipboardContentBinding="{x:Null}" Header="Type" Width="25*" IsReadOnly="True"/>
                                                     <!--<DataGridTextColumn Binding="{Binding OrdinalPosition}" ClipboardContentBinding="{x:Null}" Header="Position" Width="13*" IsReadOnly="True"/>
                      <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Length" Width="30*" IsReadOnly="True"/>-->
-                                                    <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Len" Width="35" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
+                                                    <DataGridTextColumn Binding="{Binding MaximumLength}" ClipboardContentBinding="{x:Null}" Header="Len" Width="35" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
                                                     <!--<DataGridTextColumn Binding="{Binding Precision}" ClipboardContentBinding="{x:Null}" Header="Precision" Width="60" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>-->
                                                     <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="Null?" Width="15*" IsReadOnly="True"/>
                                                     <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="ID" Width="10*" IsReadOnly="True"/>
-                                                    <DataGridTextColumn Binding="{Binding PredefinedAcceptableValues}" ClipboardContentBinding="{x:Null}" Header="Values" Width="20*" IsReadOnly="True"/>
+                                                    <DataGridTextColumn Binding="{Binding ColumnDefault}" ClipboardContentBinding="{x:Null}" Header="Values" Width="20*" IsReadOnly="True"/>
                                                     <!--<DataGridTextColumn Binding="{Binding IndexNames}" ClipboardContentBinding="{x:Null}" Header="Indexes" Width="100*" IsReadOnly="True" />-->
                                                 </DataGrid.Columns>
                                                 <DataGrid.DataContext>
-                                                    <Models:DatabaseViewModel/>
+                                                    <Models:SchemaViewModel/>
                                                 </DataGrid.DataContext>
                                             </DataGrid>
 
@@ -160,14 +160,14 @@
                                                     <DataGridTextColumn Binding="{Binding DataType}" ClipboardContentBinding="{x:Null}" Header="Type" Width="30*" IsReadOnly="True"/>
                                                     <!--<DataGridTextColumn Binding="{Binding OrdinalPosition}" ClipboardContentBinding="{x:Null}" Header="Position" Width="13*" IsReadOnly="True"/>
                                             <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Length" Width="30*" IsReadOnly="True"/>-->
-                                                    <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Len" Width="35" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
+                                                    <DataGridTextColumn Binding="{Binding MaximumLength}" ClipboardContentBinding="{x:Null}" Header="Len" Width="35" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
                                                     <!--<DataGridTextColumn Binding="{Binding Precision}" ClipboardContentBinding="{x:Null}" Header="Precision" Width="60" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>-->
                                                     <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="Null?" Width="15*" IsReadOnly="True"/>
                                                     <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="ID" Width="10*" IsReadOnly="True"/>
-                                                    <DataGridTextColumn Binding="{Binding PredefinedAcceptableValues}" ClipboardContentBinding="{x:Null}" Header="Values" Width="20*" IsReadOnly="True"/>
+                                                    <DataGridTextColumn Binding="{Binding ColumnDefault}" ClipboardContentBinding="{x:Null}" Header="Values" Width="20*" IsReadOnly="True"/>
                                                 </DataGrid.Columns>
                                                 <DataGrid.DataContext>
-                                                    <Models:DatabaseViewModel/>
+                                                    <Models:SchemaViewModel/>
                                                 </DataGrid.DataContext>
                                             </DataGrid>
 
@@ -208,6 +208,7 @@
                                         </DataGrid>
                                     </Grid>
                                 </xcad:LayoutDocument>
+                                
                             </xcad:LayoutDocumentPane>
 
                         </xcad:LayoutDocumentPaneGroup>
@@ -287,13 +288,50 @@
                                                 <DataGridTextColumn Binding="{Binding ForeignTableColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
                                             </DataGrid.Columns>
                                             <DataGrid.DataContext>
-                                                <Models:DatabaseViewModel/>
+                                                <Models:SchemaViewModel/>
                                             </DataGrid.DataContext>
                                         </DataGrid>
 
                                     </Grid>
                                 </xcad:LayoutDocument>
 
+                                <xcad:LayoutDocument CanClose="False" x:Name="docViews" ContentId="document1" Title=" Stored Procedures  " IconSource="../Images/VS/Watch_16x.png">
+                                    <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <DataGrid x:Name="dataGridViews" SelectionUnit="FullRow" HorizontalAlignment="Stretch" Margin="0,0,0,0" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="True" AlternationCount="2" AlternatingRowBackground ="Ivory"  RowHeight="22" Background="#FFF0F0F0" FontSize="12" ItemsSource="{Binding}" IsReadOnly="True">
+                                            <DataGrid.ColumnHeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                </Style>
+                                            </DataGrid.ColumnHeaderStyle>
+                                        </DataGrid>
+                                    </Grid>
+                                </xcad:LayoutDocument>
+
+                                <xcad:LayoutDocument CanClose="False" x:Name="docStoredProcedures" ContentId="document1" Title=" Views  " IconSource="../Images/VS/Watch_16x.png">
+                                    <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <DataGrid x:Name="dataGridStoredProcedures" SelectionUnit="FullRow" HorizontalAlignment="Stretch" Margin="0,0,0,0" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="True" AlternationCount="2" AlternatingRowBackground ="Ivory"  RowHeight="22" Background="#FFF0F0F0" FontSize="12" ItemsSource="{Binding}" IsReadOnly="True">
+                                            <DataGrid.ColumnHeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                </Style>
+                                            </DataGrid.ColumnHeaderStyle>
+                                        </DataGrid>
+                                    </Grid>
+                                </xcad:LayoutDocument>
                             </xcad:LayoutDocumentPane>
 
                         </xcad:LayoutDocumentPaneGroup>

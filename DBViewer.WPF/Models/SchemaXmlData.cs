@@ -2,7 +2,7 @@
 {
     public class SchemaXmlData
     {
-        public List<DatabaseViewModel> Columns { get; set; }
-        public List<TableColumnRelation> Keys { get; set; }
+        public List<SchemaViewModel> Columns { get; set; }
+        public List<RelationViewModel> Keys { get; set; }
     }
 }

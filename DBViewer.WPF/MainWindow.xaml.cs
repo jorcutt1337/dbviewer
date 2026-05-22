@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using DBViewer.WPF.Controls;
+using DBViewer.WPF.Extensions;
 using Microsoft.Win32;
 
 namespace DBViewer.WPF
@@ -110,7 +111,7 @@ namespace DBViewer.WPF
                     }
 
                     var table = ((DataView)dGrid.ItemsSource).ToTable();
-                    var csv = DataUtility.ToCSV(table);
+                    var csv = table.ToCSV();
 
                     SaveFileDialog saveFileDialog = new SaveFileDialog() { DefaultExt = ".csv", Filter = "CSV|*.csv" };
                     if (saveFileDialog.ShowDialog() == true)

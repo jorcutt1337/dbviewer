@@ -1,99 +1,16 @@
-﻿namespace DBViewer.WPF
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Reflection;
+using System.Text;
+
+namespace DBViewer.WPF.Extensions
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Configuration;
-    using System.Data;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Reflection;
-    using Microsoft.Data.SqlClient;
-
-    public static class DataUtility
+    internal static class DatatableExtensions
     {
-        #region Sql Type Code Mappings
-
-        private static readonly List<KeyValuePair<Type, TypeCode>> TYPE_CODE_MAPPINGS = new List<KeyValuePair<Type, TypeCode>>()
-            {
-                // For Flag, HierarchyId, Geography, Geometry, and other non-primitive types, we will need to implement custom parsing logic in the SetPropertyValue function
-                new KeyValuePair<Type, TypeCode>(typeof(Boolean), TypeCode.Boolean),
-                new KeyValuePair<Type, TypeCode>(typeof(bool), TypeCode.Boolean),
-                new KeyValuePair<Type, TypeCode>(typeof(byte), TypeCode.Byte),
-                new KeyValuePair<Type, TypeCode>(typeof(char), TypeCode.Char),
-                new KeyValuePair<Type, TypeCode>(typeof(Char), TypeCode.Char),
-                new KeyValuePair<Type, TypeCode>(typeof(DateTime), TypeCode.DateTime),
-                new KeyValuePair<Type, TypeCode>(typeof(decimal), TypeCode.Decimal),
-                new KeyValuePair<Type, TypeCode>(typeof(Decimal), TypeCode.Decimal),
-                new KeyValuePair<Type, TypeCode>(typeof(double), TypeCode.Double),
-                new KeyValuePair<Type, TypeCode>(typeof(Double), TypeCode.Double),
-                new KeyValuePair<Type, TypeCode>(typeof(short), TypeCode.Int16),
-                new KeyValuePair<Type, TypeCode>(typeof(int), TypeCode.Int32),
-                new KeyValuePair<Type, TypeCode>(typeof(long), TypeCode.Int64),
-                new KeyValuePair<Type, TypeCode>(typeof(float), TypeCode.Single),
-                new KeyValuePair<Type, TypeCode>(typeof(string), TypeCode.String),
-                new KeyValuePair<Type, TypeCode>(typeof(String), TypeCode.String),
-                new KeyValuePair<Type, TypeCode>(typeof(ushort), TypeCode.UInt16),
-                new KeyValuePair<Type, TypeCode>(typeof(uint), TypeCode.UInt32),
-                new KeyValuePair<Type, TypeCode>(typeof(Int16), TypeCode.Int16),
-                new KeyValuePair<Type, TypeCode>(typeof(Int32), TypeCode.Int32),
-                new KeyValuePair<Type, TypeCode>(typeof(Int64), TypeCode.Int64),
-                new KeyValuePair<Type, TypeCode>(typeof(UInt16), TypeCode.UInt16),
-                new KeyValuePair<Type, TypeCode>(typeof(UInt32), TypeCode.UInt32),
-                new KeyValuePair<Type, TypeCode>(typeof(UInt64), TypeCode.UInt64)
-            };
-
-        #endregion
-
-        #region SQL
-
-        // Only Place SQL Connections and Queries Are Made
-        public static DataTable GetDataTable(string query)
-        {
-            DataTable dt = new DataTable();
-
-            using (SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings[Globals.DB_CONNECTION].ConnectionString))
-            {
-                using (SqlDataAdapter adapter = new SqlDataAdapter(query, conn))
-                {
-                    // Open, fetch data, and close connection automatically
-                    adapter.Fill(dt);
-                }
-            }
-            return dt;
-        }
-
-        #endregion
-
         #region Reflection
 
-        public static List<T> GetInstances<T>(string query)
-        {
-            var startTime = DateTime.Now;
-
-            try
-            {
-                // Create List Of Type T
-                List<T> list = (List<T>)Activator.CreateInstance(typeof(List<T>));
-
-                // Get DataTable From Query
-                var table = GetDataTable(query);
-
-                // Convert DataTable To List Of Type T
-                list = DataUtility.GetInstanceListFromDataTable<T>(table);
-
-                Trace.WriteLine("Total Time To Load Type - " + typeof(T).Name + " - " + (int)Math.Round((DateTime.Now - startTime).TotalSeconds, 1) + " seconds");
-
-                return list;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-
-            return null;
-        }
-
-        private static List<T> GetInstanceListFromDataTable<T>(DataTable dt)
+        public static List<T> GetInstanceList<T>(this DataTable dt)
         {
             // Validation
             if (dt == null || dt.Rows.Count == 0)
@@ -128,7 +45,7 @@
             return list;
         }
 
-        private static T GetInstanceFromRow<T>(DataRow dr, List<string> columnNames, List<PropertyInfo> properties)
+        private static T GetInstanceFromRow<T>(this DataRow dr, List<string> columnNames, List<PropertyInfo> properties)
         {
             // Create New Instance Of Type T
             T item = (T)Activator.CreateInstance(typeof(T));
@@ -142,13 +59,13 @@
                 if (columnNames.Any(name => name.ToUpper() == property.Name.ToUpper()) == false
                     || dr[property.Name.ToUpper()] == null
                     || dr[property.Name.ToUpper()] == DBNull.Value
-                    || TYPE_CODE_MAPPINGS.Any(kvp => kvp.Key.Name == underlyingType.Name) == false)
+                    || SqlConstants.SqlTypeCodes.Any(kvp => kvp.Key.Name == underlyingType.Name) == false)
                 {
                     continue;
                 }
 
                 // Get Property Type TypeCode
-                TypeCode code = TYPE_CODE_MAPPINGS.First(kvp => kvp.Key == underlyingType).Value;
+                TypeCode code = SqlConstants.SqlTypeCodes.First(kvp => kvp.Key == underlyingType).Value;
 
                 // Validation
                 if (dr[property.Name.ToUpper()] == null || dr[property.Name.ToUpper()] == DBNull.Value)
@@ -257,7 +174,7 @@
                     // Since TimeSpan.Parse does not support parsing hours greater than 23,
                     // we will just need to create a DateTime object and then convert it to a TimeSpan
                     // Year 2000 Is Arbitrary. We Just Need A Valid Date To Parse The Time From.
-                    var val =  "01/01/2000 " + hours + ":00:00";
+                    var val = "01/01/2000 " + hours + ":00:00";
                     var date = DateTime.TryParse(val, out dtTemp) ? DateTime.Parse(val) : DateTime.MinValue;
                     if (date > DateTime.MinValue)
                     {
@@ -282,10 +199,21 @@
 
         #region Other
 
-        public static string ToCSV(this DataTable dt)
+        public static string ToCSV(this DataTable dt, bool includeHeaders = true)
         {
+            var csv = string.Empty;
+
+            if (includeHeaders)
+            {
+                for (var i = 0; i < dt.Columns.Count; i++)
+                {
+                    csv += dt.Columns[i].ColumnName + ",";
+                }
+                csv = csv.TrimEnd(',');
+            }
+
             var rows = dt.AsEnumerable().Select(row => string.Join(",", row.ItemArray.ToList()));
-            var csv = string.Join("\r\n", rows);
+            csv += string.Join("\r\n", rows);
 
             return csv;
         }
