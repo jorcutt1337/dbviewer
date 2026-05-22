@@ -82,6 +82,42 @@ namespace DBViewer.WPF
 		ForeignTableName, 
 		FK.constraint_column_id";
 
+		#endregion
+
+		#region Keywords
+
+		public static readonly List<string> SqlReservedKeywordsAction = new List<string>()
+		{
+            "ADD", "ALTER", "CREATE", "DELETE", "DROP", "INSERT", "SELECT", "UPDATE"
+        };
+
+        public static readonly List<string> SqlReservedKeywordsStructural = new List<string>()
+        {
+            "COLUMN", "DATABASE", "INDEX", "SCHEMA", "TABLE", "VIEW"
+        };
+
+        public static readonly List<string> SqlReservedKeywordsLogical = new List<string>()
+        {
+            "ALL", "AND", "AS", "BY", "CASE", "FROM", "GROUP", "HAVING", "IN", "JOIN", "OR", "ORDER", "WHERE"
+        };
+
+        public static readonly List<string> SqlReservedKeywordsConstraints = new List<string>()
+        {
+            "CHECK", "CONSTRAINT", "DEFAULT", "FOREIGN", "PRIMARY", "REFERENCES", "UNIQUE"
+        };
+
+        public static readonly List<string> SqlReservedKeywordsMetadata = new List<string>()
+        {
+            "CURRENT_USER", "IDENTITY", "USER", "SESSION_USER"
+        };
+
+		public static readonly List<string> SqlReservedKeywordsAll = SqlReservedKeywordsAction
+			.Concat(SqlReservedKeywordsStructural)
+			.Concat(SqlReservedKeywordsLogical)
+			.Concat(SqlReservedKeywordsConstraints)
+			.Concat(SqlReservedKeywordsMetadata).ToList();
+
+
         #endregion
 
         #region Type Mappings

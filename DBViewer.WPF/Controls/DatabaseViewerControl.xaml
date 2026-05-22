@@ -52,7 +52,7 @@
                                             <Button x:Name="btnQueryTable" Content="Top 1000" Style="{StaticResource BtnBgStyleGreen}" Margin="0,7,5,0" HorizontalAlignment="Right" Width="60" Click="btnQueryTable_Click" Height="22" VerticalAlignment="Top">
                                             </Button>
 
-                                            <DataGrid x:Name="dataGridTables" SelectionUnit="FullRow" HorizontalAlignment="Stretch" Margin="0,35,0.2,0.2" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="22" Background="#FFF0F0F0" FontSize="12" SelectionChanged="dataGridTables_SelectionChanged">
+                                            <DataGrid x:Name="gridTables" SelectionUnit="FullRow" HorizontalAlignment="Stretch" Margin="0,35,0.2,0.2" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="22" Background="#FFF0F0F0" FontSize="12" SelectionChanged="gridTables_SelectionChanged">
                                                 <DataGrid.Resources>
                                                     <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
                                                     <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightBlue"/>
@@ -91,7 +91,7 @@
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
 
-                                            <DataGrid x:Name="dataGridColumns" CanUserAddRows="False" HorizontalScrollBarVisibility="Auto" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" Margin="0,35,0.2,-0.2" RowHeight="22" Width="Auto" FontSize="12">
+                                            <DataGrid x:Name="gridColumns" CanUserAddRows="False" HorizontalScrollBarVisibility="Auto" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" Margin="0,35,0.2,-0.2" RowHeight="22" Width="Auto" FontSize="12">
                                                 <DataGrid.Resources>
                                                     <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
                                                     <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightSkyBlue"/>
@@ -143,7 +143,7 @@
                                                 <RowDefinition Height="*" />
                                             </Grid.RowDefinitions>
 
-                                            <DataGrid x:Name="databaseGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,35,0.2,0.2" Height="Auto" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="19" Background="#FFF0F0F0" FontSize="11">
+                                            <DataGrid x:Name="gridAllObjects" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,35,0.2,0.2" Height="Auto" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="19" Background="#FFF0F0F0" FontSize="11">
                                                 <DataGrid.Resources>
                                                     <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
                                                     <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightSkyBlue"/>
@@ -171,7 +171,7 @@
                                                 </DataGrid.DataContext>
                                             </DataGrid>
 
-                                            <Controls:SearchControl x:Name="allObjectsSearchCtl"  HorizontalAlignment="Left" Width="175" Margin="0, 5, 0, 0" VerticalAlignment="Top" TextChanged="allObjectsSearchCtl_TextChanged"/>
+                                            <Controls:SearchControl x:Name="allObjectsSearchCtl"  HorizontalAlignment="Left" Width="175" Margin="0, 5, 0, 0" VerticalAlignment="Top" TextChanged="AllObjectsSearchTextChanged"/>
                                             <RadioButton x:Name="rbTables" Content="Tables" Margin="140,10,0,0" VerticalAlignment="Top" FontWeight="Bold" IsChecked="True" Checked="rbTables_Checked" HorizontalAlignment="Left" Width="54"/>
                                             <RadioButton x:Name="rbColumns" Content="Columns" Margin="205,10,0,0" VerticalAlignment="Top" FontWeight="Bold" Checked="rbColumns_Checked" HorizontalAlignment="Left" Width="67"/>
                                             <RadioButton x:Name="rbTablesAndColumns" Content="Both" Margin="280,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" FontWeight="Bold" Checked="rbTablesAndColumns_Checked"/>
@@ -241,11 +241,11 @@
                                         <Button x:Name="btnExecuteQuery" Style="{StaticResource BtnBgStyleGreen}" Content="Execute Query" Margin="10,0,0,6.2" Click="BtnExecuteQuery_Click" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="100">
                                         </Button>
 
-                                        <CheckBox x:Name="chkAutoGenerateQueryJoins" Content="Generate Joins" Margin="125,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+                                        <CheckBox x:Name="chkAutoGenerateQueryJoins" Content="Generate Joins" Margin="125,0,0,6.8" Unchecked="chkAutoGenerateQueryJoins_Unchecked" Checked="chkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
 
-                                        <CheckBox x:Name="chkInclJoinSelects" Content="+ Join Selects" Margin="230,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+                                        <CheckBox x:Name="chkInclJoinSelects" Content="+ Join Selects" Margin="230,0,0,6.8" Unchecked="chkAutoGenerateQueryJoins_Unchecked" Checked="chkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
 
-                                        <CheckBox x:Name="chkAutoGenerateSelects1Line" Content="Selects 1 Ln/Table" Margin="335,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+                                        <CheckBox x:Name="chkAutoGenerateSelects1Line" Content="Selects 1 Ln/Table" Margin="335,0,0,6.8" Unchecked="chkAutoGenerateQueryJoins_Unchecked" Checked="chkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
                                     </Grid>
 
                                 </xcad:LayoutDocument>

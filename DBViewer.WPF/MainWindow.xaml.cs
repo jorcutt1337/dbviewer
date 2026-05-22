@@ -16,7 +16,7 @@ namespace DBViewer.WPF
     {
         #region Properties
 
-        // Collection of UI Tabs / UserControls that need to be updated when the environment or DataGridSelectionUnit changes
+        // Collection of UI Tabs / UserControls
         private List<ILoadableUserControl> _UserControls;
 
         #endregion

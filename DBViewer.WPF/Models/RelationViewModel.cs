@@ -1,4 +1,6 @@
-﻿namespace DBViewer.WPF.Models
+﻿using System.Xml.Serialization;
+
+namespace DBViewer.WPF.Models
 {
 	public class RelationViewModel
 	{
@@ -9,6 +11,12 @@
 		public string ForeignTableName { get; set; }
 		public string ForeignTableColumnName { get; set; }
 
-		#endregion
-	}
+		[XmlIgnore]
+		public SchemaViewModel PrimaryColumn { get; set; } = new();
+
+        [XmlIgnore]
+        public SchemaViewModel ForeignColumn { get; set; } = new();
+
+        #endregion
+    }
 }

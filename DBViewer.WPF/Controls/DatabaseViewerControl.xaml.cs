@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,11 +23,15 @@ namespace DBViewer.WPF.Controls
         private List<SchemaViewModel> _Columns = new List<SchemaViewModel>();
         private List<RelationViewModel> _Keys = new List<RelationViewModel>();
 
+        private List<SchemaModel> _Models = new List<SchemaModel>();
+
+
+
         // Datagrid Selection Unit (Row vs Cell vs Both)
         private DataGridSelectionUnit _SelectionUnit = DataGridSelectionUnit.FullRow;
 
         // Expose the currently selected query result document (if any) so that the MainWindow can perform operations on it (e.g. export to Excel)
-        public LayoutDocument CurrentQueryResultDocument
+        internal LayoutDocument CurrentQueryResultDocument
         {
             get
             {
@@ -49,6 +54,126 @@ namespace DBViewer.WPF.Controls
 
         #region Load
 
+        private void LoadDbInformation()
+        {
+            try
+            {
+                List<SchemaViewModel> columns = new List<SchemaViewModel>();
+                List<RelationViewModel> keys = new List<RelationViewModel>();
+
+                var worker = new BackgroundWorker();
+                worker.DoWork += new DoWorkEventHandler((o, ea) =>
+                {
+                    var directoryPath = System.IO.Directory.GetCurrentDirectory();
+                    var dir = new DirectoryInfo(directoryPath);
+                    var xmlFile = dir.GetFiles().FirstOrDefault(v => v.Name == Globals.XmlSchemaFilename);
+
+                    if (xmlFile == null)
+                    {
+                        columns = DataUtility.GetInstances<SchemaViewModel>(SqlConstants.SchemaQuery);
+                        keys = DataUtility.GetInstances<RelationViewModel>(SqlConstants.TableRelationsQuery);
+
+                        var data = new SchemaXmlData()
+                        {
+                            Columns = columns,
+                            Keys = keys
+                        };
+
+                        var xml = XmlExtenstions.Serialize(data);
+                        var xmlFilePath = Path.Combine(dir.FullName, Globals.XmlSchemaFilename);
+
+                        File.WriteAllText(xmlFilePath, xml);
+                    }
+                    else
+                    {
+                        var xmlContent = File.ReadAllText(xmlFile.FullName);
+                        var data = XmlExtenstions.Deserialize<SchemaXmlData>(xmlContent);
+                        columns = data.Columns;
+                        keys = data.Keys;
+                    }
+                });
+                worker.RunWorkerCompleted += (o, ea) =>
+                {
+                    this._Columns = columns;
+                    this._Keys = keys;
+
+                    foreach (var column in this._Columns)
+                    {
+                        column.OtherTableColumns = this._Columns.Where(v => v.ColumnName != column.ColumnName && v.TableName == column.TableName).ToList();
+                    }
+
+                    foreach (var key in this._Keys)
+                    {
+                        var p = this._Columns.FirstOrDefault(v => v.TableName == key.PrimaryTableName && v.ColumnName == key.PrimaryTableColumnName);
+                        var c = this._Columns.FirstOrDefault(v => v.TableName == key.ForeignTableName && v.ColumnName == key.ForeignTableColumnName);
+
+                        key.PrimaryColumn = p ?? throw new Exception($"Primary column '{key.PrimaryTableName}.{key.PrimaryTableColumnName}' not found in columns list.");
+                        key.ForeignColumn = c ?? throw new Exception($"Foreign column '{key.ForeignTableName}.{key.ForeignTableColumnName}' not found in columns list.");
+                    }
+
+                    this._Models = this._Columns.GroupBy(d => new { d.DatabaseName, d.TableName, d.TablePrefix, d.Rows })
+                        .Select(d => new SchemaModel()
+                        {
+                            TableName = d.Key.TableName,
+                            Columns = d.ToList(),
+                            RelationsDown = this._Keys.Where(k => k.PrimaryTableName == d.Key.TableName).ToList(),
+                            RelationsUp = this._Keys.Where(k => k.ForeignTableName == d.Key.TableName).ToList()
+                        }).Distinct().ToList();
+
+                    gridAllObjects.ItemsSource = new ObservableCollection<SchemaViewModel>(this._Columns);
+
+                    // Load Database Schema Table / Column Models
+                    var dataTables = new ObservableCollection<SchemaViewModel>(
+                        this._Columns
+                        .GroupBy(d => new { d.DatabaseName, d.TableName, d.TablePrefix, d.Rows })
+                        .Select(d => new SchemaViewModel()
+                        {
+                            DatabaseName = d.Key.DatabaseName,
+                            TableName = d.Key.TableName,
+                            TablePrefix = d.Key.TablePrefix,
+                            Rows = d.Key.Rows
+                        }).Distinct().ToList());
+
+                    // Load Database Schema Table Relation Models
+                    var tableRelations = new ObservableCollection<RelationViewModel>(
+                        this._Keys.OrderBy(v => v.PrimaryTableName).ThenBy(v => v.PrimaryTableColumnName).ThenBy(v => v.ForeignTableName).ThenBy(v => v.ForeignTableColumnName));
+
+                    gridTables.ItemsSource = dataTables;
+                    databaseGridAllObjects.ItemsSource = tableRelations;
+                };
+
+                worker.RunWorkerAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(string.Format("Application '{0}' failed to initialize. Error: '{1}'", nameof(DBViewer), ex.ToString()));
+            }
+        }
+
+        private void LoadTextEditorHighlighting()
+        {
+            try
+            {
+                using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(Globals.AvalonEditHiglightLanguageFilename))
+                {
+                    using (var reader = new System.Xml.XmlTextReader(stream))
+                    {
+                        this.txtQuery.SyntaxHighlighting =
+                            ICSharpCode.AvalonEdit.Highlighting.Xshd.HighlightingLoader.Load(reader,
+                            ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(string.Format("Application '{0}' failed to load AvalonDock highlighting file '{1}'. Error: '{2}'", nameof(DBViewer), Globals.AvalonEditHiglightLanguageFilename, ex.ToString()));
+            }
+        }
+
+        #endregion
+
+        #region Exposed Events
+
         // Exposed function that is called from the MainWindow to Initialize the control and load necessary data.
         // This is where we should load the database schema information and any other necessary data, as well as initialize any UI elements (e.g. syntax highlighting in the query text box)
         public void Initialize()
@@ -58,91 +183,32 @@ namespace DBViewer.WPF.Controls
             this.LoadTextEditorHighlighting();
         }
 
-        private void LoadDbInformation()
+        public void EnvironmentChanged()
         {
-            List<SchemaViewModel> columns = new List<SchemaViewModel>();
-            List<RelationViewModel> keys = new List<RelationViewModel>();
-
-            var worker = new BackgroundWorker();
-            worker.DoWork += new DoWorkEventHandler((o, ea) =>
-            {
-                var directoryPath = System.IO.Directory.GetCurrentDirectory();
-                var dir = new DirectoryInfo(directoryPath);
-                var xmlFile = dir.GetFiles().FirstOrDefault(v => v.Name == Globals.XmlSchemaFilename);
-
-                if (xmlFile == null)
-                {
-                    columns = DataUtility.GetInstances<SchemaViewModel>(SqlConstants.SchemaQuery);
-                    keys = DataUtility.GetInstances<RelationViewModel>(SqlConstants.TableRelationsQuery);
-
-                    var data = new SchemaXmlData()
-                    {
-                        Columns = columns,
-                        Keys = keys
-                    };
-
-                    var xml = XmlExtenstions.Serialize(data);
-                    var xmlFilePath = Path.Combine(dir.FullName, Globals.XmlSchemaFilename);
-
-                    File.WriteAllText(xmlFilePath, xml);
-                }
-                else
-                {
-                    var xmlContent = File.ReadAllText(xmlFile.FullName);
-                    var data = XmlExtenstions.Deserialize<SchemaXmlData>(xmlContent);
-                    columns = data.Columns;
-                    keys = data.Keys;
-                }
-
-                // Meant for SQL COLUMN_DEFAULT values that contain pipe characters which messes with the XML serialization.
-                // Replace pipe characters with dashes and trim whitespace to mitigate this issue. This is not ideal but it is a very rare occurrence and it is only for default values which are not surfaced in the UI so it should be fine.
-                foreach (var col in columns)
-                {
-                    if (col.ColumnDefault == null || col.ColumnDefault.Trim().Length == 0) { continue; }
-                    col.ColumnDefault = col.ColumnDefault.Trim().Replace("|", "-");
-                }
-            });
-            worker.RunWorkerCompleted += (o, ea) =>
-            {
-                this._Columns = columns;
-                this._Keys = keys;
-
-                var x = new ObservableCollection<SchemaViewModel>(this._Columns);
-                databaseGrid.ItemsSource = x;
-
-                // Load Database Schema Table / Column Models
-                var dataTables = new ObservableCollection<SchemaViewModel>(
-                    x
-                    .GroupBy(d => new { d.DatabaseName, d.TableName, d.TablePrefix, d.Rows })
-                    .Select(d => new SchemaViewModel()
-                    {
-                        DatabaseName = d.Key.DatabaseName,
-                        TableName = d.Key.TableName,
-                        TablePrefix = d.Key.TablePrefix,
-                        Rows = d.Key.Rows
-                    }).Distinct().ToList());
-
-                // Load Database Schema Table Relation Models
-                var tableRelations = new ObservableCollection<RelationViewModel>(
-                    this._Keys.OrderBy(v => v.PrimaryTableName).ThenBy(v => v.PrimaryTableColumnName).ThenBy(v => v.ForeignTableName).ThenBy(v => v.ForeignTableColumnName));
-
-                dataGridTables.ItemsSource = dataTables;
-                databaseGridAllObjects.ItemsSource = tableRelations;
-            };
-
-            worker.RunWorkerAsync();
         }
 
-        private void LoadTextEditorHighlighting()
+        public void DataGridSelectionModeChanged(DataGridSelectionUnit unit)
         {
-            using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(Globals.AvalonEditHiglightLanguageFilename))
+            if (docPaneQueryResults.Children.Count == 0) { return; }
+
+            this._SelectionUnit = unit;
+
+            try
             {
-                using (var reader = new System.Xml.XmlTextReader(stream))
+                for (var i = 0; i < docPaneQueryResults.Children.Count; i++)
                 {
-                    this.txtQuery.SyntaxHighlighting =
-                        ICSharpCode.AvalonEdit.Highlighting.Xshd.HighlightingLoader.Load(reader,
-                        ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance);
+                    var doc = (LayoutDocument)docPaneQueryResults.Children[i];
+                    var grid = (Grid)doc.Content;
+                    var datagrid = grid.FindLogicalChildren<DataGrid>().FirstOrDefault();
+                    if (datagrid != null)
+                    {
+                        datagrid.SelectionUnit = (DataGridSelectionUnit)unit;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
         }
 
@@ -153,11 +219,9 @@ namespace DBViewer.WPF.Controls
 
         private void btnFindTablesContainingColumn_Click(object sender, RoutedEventArgs e)
         {
-            // Validation
-            if (dataGridColumns.SelectedItem == null) { return; }
+            if (gridColumns.SelectedItem == null) { return; }
 
-            var entry = (SchemaViewModel)this.dataGridColumns.SelectedItem;
-
+            var entry = (SchemaViewModel)gridColumns.SelectedItem;
             this.rbColumns.IsChecked = true;
             this.allObjectsSearchCtl.txtSearch.Text = entry.ColumnName;
             this.docAllObjects.IsSelected = true;
@@ -165,11 +229,9 @@ namespace DBViewer.WPF.Controls
 
         private void btnGoToTable_Click(object sender, RoutedEventArgs e)
         {
-            // Validation
-            if (databaseGrid.SelectedItem == null) { return; }
+            if (gridAllObjects.SelectedItem == null) { return; }
 
-            var entry = (SchemaViewModel)this.databaseGrid.SelectedItem;
-
+            var entry = (SchemaViewModel)gridAllObjects.SelectedItem;
             this.rbTables.IsChecked = true;
             this.allObjectsSearchCtl.txtSearch.Text = entry.TableName;
             this.docAllObjects.IsSelected = true;
@@ -177,10 +239,9 @@ namespace DBViewer.WPF.Controls
 
         private void btnQueryTable_Click(object sender, RoutedEventArgs e)
         {
-            // Validation
-            if (dataGridTables.SelectedItem == null) { return; }
+            if (gridTables.SelectedItem == null) { return; }
 
-            var entry = (SchemaViewModel)this.dataGridTables.SelectedItem;
+            var entry = (SchemaViewModel)gridTables.SelectedItem;
             var query = SqlConstants.SelectTop1000 + " * FROM " + entry.TableName;
 
             this.ExecuteQuery(query);
@@ -195,7 +256,8 @@ namespace DBViewer.WPF.Controls
 
         #region DataGrids
 
-        private void dataGridTables_SelectionChanged(object sender, SelectionChangedEventArgs e) => SelectedTableChanged();
+        private void gridTables_SelectionChanged(object sender, SelectionChangedEventArgs e) => SelectedTableChanged();
+
         #endregion
 
         #region Search
@@ -203,10 +265,10 @@ namespace DBViewer.WPF.Controls
         private void tableSearchCtl_TextChanged(object sender, EventArgs e)
         {
             // Validation
-            if (this.dataGridTables.ItemsSource == null) { return; }
+            if (gridTables.ItemsSource == null) { return; }
 
             ApplySearchFilter<SchemaViewModel>(
-                    this.databaseGrid.ItemsSource,
+                    gridAllObjects.ItemsSource,
                     obj =>
                     {
                         bool tableMatch = obj.TableName?.Contains(this.allObjectsSearchCtl.SearchString, StringComparison.OrdinalIgnoreCase) == true;
@@ -214,23 +276,21 @@ namespace DBViewer.WPF.Controls
                     });
         }
 
-        private void allObjectsSearchCtl_TextChanged(object sender, EventArgs e) => AllObjectsSearchTextChanged();
-
-        private void AllObjectsSearchTextChanged()
+        private void AllObjectsSearchTextChanged(object sender = null, EventArgs e = null)
         {
             // Validation
-            if (this.databaseGrid.ItemsSource == null) { return; }
+            if (gridAllObjects.ItemsSource == null) { return; }
 
             var data = this._Columns
                 .GroupBy(v => new { v.TableName, v.ColumnName }).Select(v => v.First()).Distinct()
                 .OrderBy(v => v.TableName).ThenBy(v => v.ColumnName).ToList();
 
-            this.databaseGrid.ItemsSource = data;
+            gridAllObjects.ItemsSource = data;
 
-            ICollectionView view = CollectionViewSource.GetDefaultView(this.databaseGrid.ItemsSource);
+            ICollectionView view = CollectionViewSource.GetDefaultView(gridAllObjects.ItemsSource);
 
             ApplySearchFilter<SchemaViewModel>(
-                    this.databaseGrid.ItemsSource,
+                    gridAllObjects.ItemsSource,
                     obj =>
                     {
                         bool tableMatch = obj.TableName?.Contains(this.allObjectsSearchCtl.SearchString, StringComparison.OrdinalIgnoreCase) == true;
@@ -271,41 +331,8 @@ namespace DBViewer.WPF.Controls
 
         #region Checkbox
 
-        private void ChkAutoGenerateQueryJoins_Unchecked(object sender, RoutedEventArgs e) => SelectedTableChanged();
-        private void ChkAutoGenerateQueryJoins_Checked(object sender, RoutedEventArgs e) => SelectedTableChanged();
-
-        #endregion
-
-        #region Exposed Events
-
-        public void EnvironmentChanged()
-        {
-        }
-
-        public void DataGridSelectionModeChanged(DataGridSelectionUnit unit)
-        {
-            if (docPaneQueryResults.Children.Count == 0) { return; }
-
-            this._SelectionUnit = unit;
-
-            try
-            {
-                for (var i = 0; i < docPaneQueryResults.Children.Count; i++)
-                {
-                    var doc = (LayoutDocument)docPaneQueryResults.Children[i];
-                    var grid = (Grid)doc.Content;
-                    var datagrid = grid.FindLogicalChildren<DataGrid>().FirstOrDefault();
-                    if (datagrid != null)
-                    {
-                        datagrid.SelectionUnit = (DataGridSelectionUnit)unit;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-        }
+        private void chkAutoGenerateQueryJoins_Unchecked(object sender, RoutedEventArgs e) => SelectedTableChanged();
+        private void chkAutoGenerateQueryJoins_Checked(object sender, RoutedEventArgs e) => SelectedTableChanged();
 
         #endregion
 
@@ -313,82 +340,88 @@ namespace DBViewer.WPF.Controls
 
         private void SelectedTableChanged()
         {
-            // Validation
-            if (dataGridTables.SelectedItem == null) { return; }
+            if (gridTables.SelectedItem == null) { return; }
+
+            const string TB = "\t";
+            const string RN = "\r\n";
+            const string RNT = RN + TB;
 
             var singleLine = chkAutoGenerateSelects1Line.IsChecked == true;
-            var singleLineTT = (singleLine == false ? "" : "\t\t");
+            var SLTT = (singleLine == false ? string.Empty : TB + TB);
 
-            const string RN = "\r\n";
-            const string RNT = RN + "\t";
+            var table = (SchemaViewModel)this.gridTables.SelectedItem;
+            var tableModel = this._Models.FirstOrDefault(m => m.TableName == table.TableName);
 
-            var table = (SchemaViewModel)this.dataGridTables.SelectedItem;
-            var tableColumns = this._Columns.Where(r => r.TableName == table.TableName).Distinct().ToList();
+            var relatedTableColumnsSelect = string.Empty;
+            var relatedTableJoins = new List<string>();
 
-            // Ident
-            var col = this._Columns.Where(v => v.TableName == table.TableName && v.IsIdentity).FirstOrDefault();
-            var data = this._Columns.Where(r => r.ColumnName == col?.ColumnName).Distinct().ToList();
+            var idx = 2;
 
-            if (data == null) { return; }
+            if (tableModel == null) { throw new InvalidOperationException("Table model not found."); }
 
-            this.dataGridColumns.ItemsSource = new ObservableCollection<SchemaViewModel>(data);
-
-            var relatedTables = this._Keys
-                .Where(v => v.PrimaryTableName == table.TableName && v.ForeignTableName != table.TableName)
-                .GroupBy(v => new { v.ForeignTableName }).ToList();
-            var relatedTableNames = relatedTables.Select(v => v.Key.ForeignTableName).Distinct().ToList();
-            var relatedTableColumns = this._Columns.Where(v => relatedTableNames.Contains(v.TableName)).GroupBy(v => new { v.TableName }).ToList();
-
-            var tableJoins = relatedTables.Select((v, i) => new
+            foreach (var key in tableModel.RelationsUp)
             {
-                Clause = "\tLEFT JOIN " + v.Key.ForeignTableName + " X" + (i + 1) + " ON " + string.Join(" AND ", v.Select(x => "X" + (i + 1) + "." + x.ForeignTableColumnName + " = X." + col.ColumnName).Distinct())
-            }).ToList();
+                var relatedTableColumns = new List<SchemaViewModel>() { key.PrimaryColumn }.Concat(key.PrimaryColumn.OtherTableColumns).Distinct().ToList();
 
-            var relatedTableColumnsSelect = RN + singleLineTT + string.Join("," + RN + singleLineTT, relatedTableColumns.Select((v, i) => string.Join("," + (singleLine == false ? RN : " "), v.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? "\t\t" : "") + "X" + (i + 1) + "." + x.ColumnName)))).TrimEnd('\r').TrimEnd('\n').TrimEnd(',');
+                relatedTableJoins.Add(TB + "INNER JOIN " + key.PrimaryTableName + " X" + idx + " ON " + "X" + idx + "." + key.PrimaryTableColumnName + " = " + "X." + key.ForeignTableColumnName);
+
+                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + idx + "." + x.ColumnName));
+                relatedTableColumnsSelect += ",";
+                idx++;
+
+                Console.WriteLine($"Primary: {key.ForeignTableName}.{key.ForeignTableColumnName} -> Foreign: {key.PrimaryTableName}.{key.PrimaryTableColumnName}");
+            }
+
+            foreach (var key in tableModel.RelationsDown)
+            {
+                var relatedTableColumns = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns).Distinct().ToList();
+
+                relatedTableJoins.Add(TB + "LEFT JOIN " + key.ForeignTableName + " X" + idx + " ON " + "X" + idx + "." + key.ForeignTableColumnName + " = " + "X." + key.PrimaryTableColumnName);
+
+                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + idx + "." + x.ColumnName));
+                relatedTableColumnsSelect += ",";
+                idx++;
+
+                Console.WriteLine($"Primary: {key.PrimaryTableName}.{key.PrimaryTableColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignTableColumnName}");
+            }
+
+            relatedTableColumnsSelect = relatedTableColumnsSelect.TrimEnd(',');
 
             columnDatabaseName.Visibility = Visibility.Hidden;
             columnTableName.Visibility = Visibility.Hidden;
 
             var query = "USE " + table.DatabaseName + RN + RN + "\t" + SqlConstants.SelectTop1000 + RN;
 
+            var primaryColumns = tableModel.Columns.OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? TB + TB : " ") + "X." + v.ColumnName).Distinct().ToList();
+
             if (this.chkAutoGenerateQueryJoins.IsChecked == true)
             {
-                query +=
-                singleLineTT + String.Join("," + (singleLine == false ? RN : ""), tableColumns.OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? "\t\t" : " ") + "X." + v.ColumnName).Distinct().ToList()) +
+                query += SLTT + String.Join("," + (singleLine == false ? RN : ""), primaryColumns) +
                 (chkInclJoinSelects.IsChecked == false ? "" : (relatedTableColumnsSelect.Replace(RN, "").Length > 0 ? "," + relatedTableColumnsSelect.TrimEnd('\r').TrimEnd('\n').TrimEnd(',') : "")) +
                 RNT + "FROM " + table.TableName + " X" +
-                RNT + string.Join(RNT, tableJoins.Select(v => v.Clause)) +
-                RNT +
-                RNT;
+                RNT + string.Join(RNT, relatedTableJoins);
             }
             else
             {
-                data = this._Columns.Where(r => r.TableName == table.TableName).Distinct().ToList();
                 query +=
-                singleLineTT + String.Join("," + (singleLine == false ? RN : ""), data.Where(v => v.ColumnName != null && v.ColumnName != string.Empty).OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? "\t\t" : " ") + "X." + v.ColumnName)) +
-                RNT + "FROM " + table.TableName + " X" +
-                RNT + "" +
-                RNT;
+                SLTT + String.Join("," + (singleLine == false ? RN : ""), primaryColumns) +
+                RNT + "FROM " + table.TableName + " X";
             }
-            this.txtQuery.Text = query;
 
-            query += RNT + RNT + RNT;
+            this.txtQuery.Text = query + RNT + RNT;
+            this.docColumns.Title = table.TableName;
 
+            gridColumns.ItemsSource = new ObservableCollection<SchemaViewModel>(tableModel.Columns);
             columnDatabaseName.Visibility = Visibility.Hidden;
             columnTableName.Visibility = Visibility.Hidden;
-
-            this.dataGridColumns.ItemsSource = new ObservableCollection<SchemaViewModel>(tableColumns);
-
-            this.txtQuery.Text = query;
-            this.docColumns.Title = table.TableName;
         }
 
         private void ExecuteQuery(string query)
         {
             // Validation
-            if (dataGridTables.SelectedItem == null) { return; }
+            if (gridTables.SelectedItem == null) { return; }
 
-            var item = (SchemaViewModel)this.dataGridTables.SelectedItem;
+            var item = (SchemaViewModel)gridTables.SelectedItem;
 
             try
             {
@@ -453,6 +486,5 @@ namespace DBViewer.WPF.Controls
         }
 
         #endregion
-
     }
 }
