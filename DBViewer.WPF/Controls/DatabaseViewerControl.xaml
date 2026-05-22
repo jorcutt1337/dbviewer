@@ -8,7 +8,7 @@
              xmlns:Controls="clr-namespace:DBViewer.WPF.Controls"
              xmlns:Models="clr-namespace:DBViewer.WPF.Models"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="1200">
+             d:DesignHeight="1080" d:DesignWidth="1900">
     <Grid Background="#FFE5E5E5">
         <xcad:DockingManager Grid.Row="0" AllowMixedOrientation="True" BorderBrush="Black" BorderThickness="1" Margin="0,0,0,0.4">
             <xcad:DockingManager.Theme>
@@ -30,7 +30,7 @@
                 <xcad:LayoutPanel Orientation="Horizontal">
 
                     <!-- LEFT SIDE -->
-                    <xcad:LayoutPanel Orientation="Vertical">
+                    <xcad:LayoutPanel Orientation="Vertical" DockWidth="1300*">
 
                         <!-- TOP ROW -->
                         <xcad:LayoutPanel Orientation="Horizontal">
@@ -219,7 +219,7 @@
 
 
                     <!-- RIGHT SIDE -->
-                    <xcad:LayoutPanel Orientation="Vertical" DockWidth="550">
+                    <xcad:LayoutPanel x:Name="lpRight" Orientation="Vertical" DockWidth="500" DockMinWidth="500">
 
                         <!-- TOP RIGHT -->
                         <xcad:LayoutDocumentPaneGroup DockHeight="3*">
@@ -237,12 +237,14 @@
                                         </Grid.RowDefinitions>
 
                                         <avalonEdit:TextEditor x:Name="txtQuery" Background="GhostWhite" FontFamily="Consolas" FontSize="10pt" SyntaxHighlighting="SQL" ShowLineNumbers="True" Margin="0,0,0,32.8" />
-                                        <Button x:Name="btnExecuteQuery" Style="{StaticResource BtnBgStyleGreen}" Content="Execute Query" Margin="10,0,0,6.2" Click="BtnExecuteQuery_Click" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="120">
+                                        <Button x:Name="btnExecuteQuery" Style="{StaticResource BtnBgStyleGreen}" Content="Execute Query" Margin="10,0,0,6.2" Click="BtnExecuteQuery_Click" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="100">
                                         </Button>
 
-                                        <CheckBox x:Name="chkAutoGenerateQueryJoins" Content="Auto-Generate Query Joins" Margin="150,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+                                        <CheckBox x:Name="chkAutoGenerateQueryJoins" Content="Generate Joins" Margin="125,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
 
-                                        <CheckBox x:Name="chkAutoGenerateSelects1Line" Content="Selects On 1 Line/Table" Margin="340,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+                                        <CheckBox x:Name="chkInclJoinSelects" Content="+ Join Selects" Margin="230,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+
+                                        <CheckBox x:Name="chkAutoGenerateSelects1Line" Content="Selects 1 Ln/Table" Margin="335,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
                                     </Grid>
 
                                 </xcad:LayoutDocument>
@@ -252,7 +254,7 @@
                         </xcad:LayoutDocumentPaneGroup>
 
                         <!-- BOTTOM RIGHT -->
-                        <xcad:LayoutDocumentPaneGroup DockHeight="*">
+                        <xcad:LayoutDocumentPaneGroup DockHeight="1*">
 
                             <xcad:LayoutDocumentPane>
 
@@ -298,93 +300,6 @@
 
                     </xcad:LayoutPanel>
                 </xcad:LayoutPanel>
-
-
-                <!-- RIGHT SIDE --><!--
-                    <xcad:LayoutPanel Orientation="Vertical" DockWidth="570">
-
-                        --><!-- TOP RIGHT --><!--
-                        <xcad:LayoutAnchorablePane DockHeight="3*">
-                            <xcad:LayoutAnchorable Title="SQL Editor" x:Name="pnAllObjects" CanClose="False"  ContentId="agenda" IconSource="../Images/VS/Search_16x.png" CanHide="False" CanAutoHide="True" IsMaximized="False" AutoHideMinWidth="250" AutoHideWidth="700">
-                                <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-
-                                    <avalonEdit:TextEditor x:Name="txtQuery" Background="GhostWhite" FontFamily="Consolas" FontSize="10pt" SyntaxHighlighting="SQL" ShowLineNumbers="True" Margin="0,0,0,32.8" />
-                                    <Button x:Name="btnExecuteQuery" Style="{StaticResource BtnBgStyleGreen}" Content="Execute Query" Margin="10,0,0,6.2" Click="BtnExecuteQuery_Click" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="120">
-                                    </Button>
-
-                                    <CheckBox x:Name="chkAutoGenerateQueryJoins" Content="Auto-Generate Query Joins" Margin="150,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
-
-                                    <CheckBox x:Name="chkAutoGenerateSelects1Line" Content="Selects On 1 Line/Table" Margin="340,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
-                                </Grid>
-                            </xcad:LayoutAnchorable>
-
-                        </xcad:LayoutAnchorablePane>
-
-                        --><!-- BOTTOM RIGHT --><!--
-                        <xcad:LayoutAnchorablePane DockHeight="2*">
-
-                            <xcad:LayoutAnchorable x:Name="pnTableRelations" Title="Table Relations" CanClose="False"  ContentId="agenda" IconSource="../Images/VS/Search_16x.png" CanHide="False" CanAutoHide="True" IsMaximized="False" AutoHideMinWidth="250" AutoHideWidth="700">
-
-                                <Grid Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" Background="#FFF4F7FC">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*" />
-                                    </Grid.RowDefinitions>
-
-                                    <DataGrid x:Name="databaseGridAllObjects" Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="19" Background="#FFF0F0F0" FontSize="11">
-                                        <DataGrid.Resources>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightSkyBlue"/>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="white"/>
-                                        </DataGrid.Resources>
-                                        <DataGrid.ColumnHeaderStyle>
-                                            <Style TargetType="{x:Type DataGridColumnHeader}">
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                            </Style>
-                                        </DataGrid.ColumnHeaderStyle>
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Binding="{Binding PrimaryTableName}" ClipboardContentBinding="{x:Null}" Header="Primary Table" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
-                                            <DataGridTextColumn Binding="{Binding PrimaryTableColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
-                                            <DataGridTextColumn Binding="{Binding ForeignTableName}" ClipboardContentBinding="{x:Null}" Header="Foreign Table" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
-                                            <DataGridTextColumn Binding="{Binding ForeignTableColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
-                                        </DataGrid.Columns>
-                                        <DataGrid.DataContext>
-                                            <Models:DatabaseViewModel/>
-                                        </DataGrid.DataContext>
-                                    </DataGrid>
-
-                                </Grid>
-
-                            </xcad:LayoutAnchorable>
-                        </xcad:LayoutAnchorablePane>
-
-                    </xcad:LayoutPanel>
-
-                </xcad:LayoutPanel>-->
-
-                <!--<xcad:LayoutRoot.LeftSide>
-
-                    <xcad:LayoutAnchorSide>
-
-                        <xcad:LayoutAnchorGroup>
-
-                            <xcad:LayoutAnchorable x:Name="pnPutStuffHere" Title="Put Stuff Here" CanClose="False"  ContentId="agenda" IconSource="../Images/VS/Search_16x.png" CanHide="False" CanAutoHide="True" IsMaximized="False" AutoHideMinWidth="250" AutoHideWidth="700">
-
-                            </xcad:LayoutAnchorable>
-
-                        </xcad:LayoutAnchorGroup>
-
-                    </xcad:LayoutAnchorSide>
-
-                </xcad:LayoutRoot.LeftSide>-->
             </xcad:LayoutRoot>
 
         </xcad:DockingManager>

@@ -235,15 +235,13 @@ namespace DBViewer.WPF.Controls
             columnDatabaseName.Visibility = Visibility.Hidden;
             columnTableName.Visibility = Visibility.Hidden;
 
-            var query = "USE " + table.DatabaseName + RN + RN + RN;
-
+            var query = "USE " + table.DatabaseName + RN + RN + RN + "\t" + "SELECT TOP 1000" + RN;
 
             if (this.chkAutoGenerateQueryJoins.IsChecked == true)
             {
                 query +=
-                "\t" + "SELECT TOP 1000" + RN +
                 singleLineTT + String.Join("," + (singleLine == false ? RN : ""), tableColumns.OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? "\t\t" : " ") + "X." + v.ColumnName).Distinct().ToList()) +
-                (relatedTableColumnsSelect.Replace(RN, "").Length > 0 ? "," + relatedTableColumnsSelect.TrimEnd('\r').TrimEnd('\n').TrimEnd(',') : "") +
+                (chkInclJoinSelects.IsChecked == false ? "" : (relatedTableColumnsSelect.Replace(RN, "").Length > 0 ? "," + relatedTableColumnsSelect.TrimEnd('\r').TrimEnd('\n').TrimEnd(',') : "")) +
                 RNT + "FROM " + table.TableName + " X" +
                 RNT + string.Join(RNT, tableJoins.Select(v => v.Clause)) +
                 RNT +
@@ -253,7 +251,6 @@ namespace DBViewer.WPF.Controls
             {
                 data = this._Columns.Where(r => r.TableName == table.TableName).Distinct().ToList();
                 query +=
-                "\t" + "SELECT TOP 1000" + RN +
                 singleLineTT + String.Join("," + (singleLine == false ? RN : ""), data.Where(v => v.ColumnName != null && v.ColumnName != string.Empty).OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? "\t\t" : " ") + "X." + v.ColumnName)) +
                 RNT + "FROM " + table.TableName + " X" +
                 RNT + "" +
