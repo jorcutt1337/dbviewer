@@ -22,17 +22,227 @@
                     </StackPanel>
                 </DataTemplate>
             </xcad:DockingManager.DocumentHeaderTemplate>
+
+
             <xcad:LayoutRoot x:Name="_layoutRoot">
 
-                <xcad:LayoutRoot.RightSide>
-                    
-                    <xcad:LayoutAnchorSide>
-                        
-                        <xcad:LayoutAnchorGroup>
-                            
-                            <xcad:LayoutAnchorable x:Name="pnAllObjects" Title="Table Relations" CanClose="False"  ContentId="agenda" IconSource="../Images/VS/Search_16x.png" CanHide="False" CanAutoHide="True" IsMaximized="False" AutoHideMinWidth="250" AutoHideWidth="700">
-                                
-                                <Grid Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFF4F7FC" Margin="0,0,0,0">
+                <!-- MAIN ROOT -->
+                <xcad:LayoutPanel Orientation="Horizontal">
+
+                    <!-- LEFT SIDE -->
+                    <xcad:LayoutPanel Orientation="Vertical">
+
+                        <!-- TOP ROW -->
+                        <xcad:LayoutPanel Orientation="Horizontal">
+
+                            <!-- TABLES -->
+                            <xcad:LayoutDocumentPaneGroup DockWidth="1.5*" DockMinWidth="225">
+                                <xcad:LayoutDocumentPane>
+                                    <xcad:LayoutDocument x:Name="docTables" CanClose="False" Title=" Tables  " IconSource="../Images/VS/Table_16x.png" >
+                                        <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Left" VerticalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Controls:SearchControl x:Name="tableSearchCtl" VerticalAlignment="Top" TextChanged="tableSearchCtl_TextChanged" HorizontalAlignment="Left" Width="175" Margin="0, 5, 0, 0"/>
+
+                                            <Button x:Name="btnQueryTable" Content="Top 1000" Style="{StaticResource BtnBgStyleGreen}" Margin="0,7,5,0" HorizontalAlignment="Right" Width="60" Click="btnQueryTable_Click" Height="22" VerticalAlignment="Top">
+                                            </Button>
+
+                                            <DataGrid x:Name="dataGridTables" SelectionUnit="FullRow" HorizontalAlignment="Stretch" Margin="0,35,0.2,0.2" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="22" Background="#FFF0F0F0" FontSize="12" SelectionChanged="dataGridTables_SelectionChanged">
+                                                <DataGrid.Resources>
+                                                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
+                                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightBlue"/>
+                                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="white"/>
+                                                </DataGrid.Resources>
+                                                <DataGrid.ColumnHeaderStyle>
+                                                    <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </Style>
+                                                </DataGrid.ColumnHeaderStyle>
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="90*" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold"/>
+                                                    <!--<DataGridTextColumn Binding="{Binding KeyColumns}" ClipboardContentBinding="{x:Null}" Header="Keys" Width="70*" IsReadOnly="True" Foreground="#FF114900"/>-->
+                                                    <DataGridTextColumn Binding="{Binding Rows}" ClipboardContentBinding="{x:Null}" Header="#" Width="12*" IsReadOnly="True" Foreground="#FF114900"/>
+                                                </DataGrid.Columns>
+                                                <DataGrid.DataContext>
+                                                    <Models:DatabaseViewModel/>
+                                                </DataGrid.DataContext>
+                                            </DataGrid>
+
+                                        </Grid>
+                                    </xcad:LayoutDocument>
+
+                                </xcad:LayoutDocumentPane>
+                            </xcad:LayoutDocumentPaneGroup>
+
+                            <!-- COLUMNS -->
+                            <xcad:LayoutDocumentPaneGroup DockWidth="3" DockMinWidth="400">
+                                <xcad:LayoutDocumentPane>
+                                    <xcad:LayoutDocument x:Name="docColumns" CanClose="False" Title="Columns" IconSource="../Images/VS/Column_16x.png">
+                                        <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <DataGrid x:Name="dataGridColumns" CanUserAddRows="False" HorizontalScrollBarVisibility="Auto" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" Margin="0,35,0.2,-0.2" RowHeight="22" Width="Auto" FontSize="12">
+                                                <DataGrid.Resources>
+                                                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
+                                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightSkyBlue"/>
+                                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="white"/>
+                                                </DataGrid.Resources>
+                                                <DataGrid.ColumnHeaderStyle>
+                                                    <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </Style>
+                                                </DataGrid.ColumnHeaderStyle>
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn x:Name="columnDatabaseName" Binding="{Binding DatabaseName}" ClipboardContentBinding="{x:Null}" Header="Database" Width="60*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold" Visibility="Hidden"/>
+                                                    <DataGridTextColumn x:Name="columnTableName" Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="100*" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold" Visibility="Hidden"/>
+                                                    <DataGridTextColumn Binding="{Binding ColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="65*" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
+                                                    <!--<DataGridTextColumn Binding="{Binding ColumnDescription}" ClipboardContentBinding="{x:Null}" Header="Description" Width="75*" IsReadOnly="True" Foreground="#FF00067A"/>-->
+                                                    <DataGridTextColumn Binding="{Binding DataType}" ClipboardContentBinding="{x:Null}" Header="Type" Width="25*" IsReadOnly="True"/>
+                                                    <!--<DataGridTextColumn Binding="{Binding OrdinalPosition}" ClipboardContentBinding="{x:Null}" Header="Position" Width="13*" IsReadOnly="True"/>
+                     <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Length" Width="30*" IsReadOnly="True"/>-->
+                                                    <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Len" Width="35" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
+                                                    <!--<DataGridTextColumn Binding="{Binding Precision}" ClipboardContentBinding="{x:Null}" Header="Precision" Width="60" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>-->
+                                                    <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="Null?" Width="15*" IsReadOnly="True"/>
+                                                    <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="ID" Width="10*" IsReadOnly="True"/>
+                                                    <DataGridTextColumn Binding="{Binding PredefinedAcceptableValues}" ClipboardContentBinding="{x:Null}" Header="Values" Width="20*" IsReadOnly="True"/>
+                                                    <!--<DataGridTextColumn Binding="{Binding IndexNames}" ClipboardContentBinding="{x:Null}" Header="Indexes" Width="100*" IsReadOnly="True" />-->
+                                                </DataGrid.Columns>
+                                                <DataGrid.DataContext>
+                                                    <Models:DatabaseViewModel/>
+                                                </DataGrid.DataContext>
+                                            </DataGrid>
+
+                                            <Button x:Name="btnFindTablesContainingColumn" Style="{StaticResource BtnBgStyleGreen}" Content="Show Tables w/Column" HorizontalAlignment="Left" Width="130" Click="btnFindTablesContainingColumn_Click" Height="22" VerticalAlignment="Top" Margin="5,8,0,0">
+                                            </Button>
+                                        </Grid>
+                                    </xcad:LayoutDocument>
+
+                                </xcad:LayoutDocumentPane>
+                            </xcad:LayoutDocumentPaneGroup>
+
+                            <!-- ALL OBJECTS -->
+                            <xcad:LayoutDocumentPaneGroup DockWidth="5*" DockMinWidth="400">
+                                <xcad:LayoutDocumentPane>
+
+                                    <xcad:LayoutDocument x:Name="docAllObjects" CanClose="False" Title=" All Objects  " IconSource="../Images/VS/ToggleWorld_16x.png" >
+                                        <Grid Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0.2,0.2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <DataGrid x:Name="databaseGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,35,0.2,0.2" Height="Auto" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="19" Background="#FFF0F0F0" FontSize="11">
+                                                <DataGrid.Resources>
+                                                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
+                                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightSkyBlue"/>
+                                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="white"/>
+                                                </DataGrid.Resources>
+                                                <DataGrid.ColumnHeaderStyle>
+                                                    <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </Style>
+                                                </DataGrid.ColumnHeaderStyle>
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="80*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
+                                                    <DataGridTextColumn Binding="{Binding ColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="80*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
+                                                    <DataGridTextColumn Binding="{Binding DataType}" ClipboardContentBinding="{x:Null}" Header="Type" Width="30*" IsReadOnly="True"/>
+                                                    <!--<DataGridTextColumn Binding="{Binding OrdinalPosition}" ClipboardContentBinding="{x:Null}" Header="Position" Width="13*" IsReadOnly="True"/>
+                                            <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Length" Width="30*" IsReadOnly="True"/>-->
+                                                    <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Len" Width="35" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
+                                                    <!--<DataGridTextColumn Binding="{Binding Precision}" ClipboardContentBinding="{x:Null}" Header="Precision" Width="60" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>-->
+                                                    <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="Null?" Width="15*" IsReadOnly="True"/>
+                                                    <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="ID" Width="10*" IsReadOnly="True"/>
+                                                    <DataGridTextColumn Binding="{Binding PredefinedAcceptableValues}" ClipboardContentBinding="{x:Null}" Header="Values" Width="20*" IsReadOnly="True"/>
+                                                </DataGrid.Columns>
+                                                <DataGrid.DataContext>
+                                                    <Models:DatabaseViewModel/>
+                                                </DataGrid.DataContext>
+                                            </DataGrid>
+
+                                            <Controls:SearchControl x:Name="allObjectsSearchCtl"  HorizontalAlignment="Left" Width="175" Margin="0, 5, 0, 0" VerticalAlignment="Top" TextChanged="allObjectsSearchCtl_TextChanged"/>
+                                            <RadioButton x:Name="rbTables" Content="Tables" Margin="178,10,0,0" VerticalAlignment="Top" FontWeight="Bold" IsChecked="True" Checked="rbTables_Checked" HorizontalAlignment="Left" Width="54"/>
+                                            <RadioButton x:Name="rbColumns" Content="Columns" Margin="238,10,0,0" VerticalAlignment="Top" FontWeight="Bold" Checked="rbColumns_Checked" HorizontalAlignment="Left" Width="67"/>
+                                            <RadioButton x:Name="rbTablesAndColumns" Content="Both" Margin="311,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" FontWeight="Bold" Checked="rbTablesAndColumns_Checked"/>
+
+                                            <Button x:Name="btnGoToTable" Style="{StaticResource BtnBgStyleGreen}" Content="View Table" Margin="0,7,5,0" HorizontalAlignment="Right"  Click="btnGoToTable_Click" Height="22" VerticalAlignment="Top" Width="70">
+                                            </Button>
+                                        </Grid>
+                                    </xcad:LayoutDocument>
+
+                                </xcad:LayoutDocumentPane>
+                            </xcad:LayoutDocumentPaneGroup>
+
+                        </xcad:LayoutPanel>
+
+                        <!-- BOTTOM RESULTS -->
+                        <xcad:LayoutDocumentPaneGroup DockHeight="*">
+
+                            <xcad:LayoutDocumentPane x:Name="docPaneQueryResults">
+                                <xcad:LayoutDocument CanClose="False" x:Name="docQueryResults" ContentId="document1" Title="Query Results" IconSource="../Images/VS/Watch_16x.png"  >
+                                    <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <DataGrid x:Name="dataGridQueryResults" SelectionUnit="FullRow" HorizontalAlignment="Stretch" Margin="0,0,0,0" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="True" AlternationCount="2" AlternatingRowBackground ="Ivory"  RowHeight="22" Background="#FFF0F0F0" FontSize="12" ItemsSource="{Binding}" IsReadOnly="True">
+                                            <DataGrid.ColumnHeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                </Style>
+                                            </DataGrid.ColumnHeaderStyle>
+                                        </DataGrid>
+                                    </Grid>
+                                </xcad:LayoutDocument>
+                            </xcad:LayoutDocumentPane>
+
+                        </xcad:LayoutDocumentPaneGroup>
+
+                    </xcad:LayoutPanel>
+                    <!-- RIGHT SIDE -->
+                    <xcad:LayoutPanel Orientation="Vertical" DockWidth="570">
+
+                        <!-- TOP RIGHT -->
+                        <xcad:LayoutAnchorablePane DockHeight="3*">
+                            <xcad:LayoutAnchorable Title="SQL Editor" x:Name="pnAllObjects" CanClose="False"  ContentId="agenda" IconSource="../Images/VS/Search_16x.png" CanHide="False" CanAutoHide="True" IsMaximized="False" AutoHideMinWidth="250" AutoHideWidth="700">
+                                <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <avalonEdit:TextEditor x:Name="txtQuery" Background="GhostWhite" FontFamily="Consolas" FontSize="10pt" SyntaxHighlighting="SQL" ShowLineNumbers="True" Margin="0,0,0,32.8" />
+                                    <Button x:Name="btnExecuteQuery" Style="{StaticResource BtnBgStyleGreen}" Content="Execute Query" Margin="10,0,0,6.2" Click="BtnExecuteQuery_Click" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="139">
+                                    </Button>
+
+                                    <CheckBox x:Name="chkAutoGenerateQueryJoins" Content="Auto-Generate Query Joins" Margin="159,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+                                </Grid>
+                            </xcad:LayoutAnchorable>
+
+                        </xcad:LayoutAnchorablePane>
+
+                        <!-- BOTTOM RIGHT -->
+                        <xcad:LayoutAnchorablePane DockHeight="2*">
+
+                            <xcad:LayoutAnchorable x:Name="pnTableRelations" Title="Table Relations" CanClose="False"  ContentId="agenda" IconSource="../Images/VS/Search_16x.png" CanHide="False" CanAutoHide="True" IsMaximized="False" AutoHideMinWidth="250" AutoHideWidth="700">
+
+                                <Grid Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" Background="#FFF4F7FC">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
@@ -40,7 +250,7 @@
                                         <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
 
-                                    <DataGrid x:Name="databaseGridAllObjects" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" Height="Auto" Width="700" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="19" Background="#FFF0F0F0" FontSize="11">
+                                    <DataGrid x:Name="databaseGridAllObjects" Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="19" Background="#FFF0F0F0" FontSize="11">
                                         <DataGrid.Resources>
                                             <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
                                             <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightSkyBlue"/>
@@ -56,251 +266,38 @@
                                             <DataGridTextColumn Binding="{Binding PrimaryTableColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
                                             <DataGridTextColumn Binding="{Binding ForeignTableName}" ClipboardContentBinding="{x:Null}" Header="Foreign Table" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
                                             <DataGridTextColumn Binding="{Binding ForeignTableColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
-                                            </DataGrid.Columns>
+                                        </DataGrid.Columns>
                                         <DataGrid.DataContext>
                                             <Models:DatabaseViewModel/>
                                         </DataGrid.DataContext>
                                     </DataGrid>
 
                                 </Grid>
-                            
+
                             </xcad:LayoutAnchorable>
-                       
-                        </xcad:LayoutAnchorGroup>
-                        
-                    </xcad:LayoutAnchorSide>
-                    
-                </xcad:LayoutRoot.RightSide>
-                
-                <xcad:LayoutPanel Orientation="Vertical">
-                    
-                    <xcad:LayoutDocumentPaneGroup>
+                        </xcad:LayoutAnchorablePane>
 
-                        <xcad:LayoutDocumentPane DockWidth="400*" DockMinWidth="400">
-                            <xcad:LayoutDocument x:Name="docTables" CanClose="False" Title=" Tables  " IconSource="../Images/VS/Table_16x.png" >
-                                <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Left" VerticalAlignment="Stretch">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
+                    </xcad:LayoutPanel>
 
-                                    <Controls:SearchControl x:Name="tableSearchCtl" VerticalAlignment="Top" TextChanged="tableSearchCtl_TextChanged" HorizontalAlignment="Left" Width="195" Margin="0, 5, 0, 0"/>
-
-                                        <Button x:Name="btnQueryTable" Content="Select Top 1000 Rows" Margin="0,7,10,0" HorizontalAlignment="Right" Width="140" Click="btnQueryTable_Click" Height="22" VerticalAlignment="Top">
-                                            <Button.Background>
-                                                <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
-                                                    <GradientStop Color="#FFF3F3F3" Offset="0"/>
-                                                    <GradientStop Color="#FFEBEBEB"/>
-                                                    <GradientStop Color="#FFDDDDDD"/>
-                                                    <GradientStop Color="#FF73D647" Offset="1"/>
-                                                </LinearGradientBrush>
-                                            </Button.Background>
-                                        </Button>
-
-                                    <DataGrid x:Name="dataGridTables" SelectionUnit="FullRow" HorizontalAlignment="Stretch" Margin="0,35,0.2,0.2" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="22" Background="#FFF0F0F0" FontSize="12" SelectionChanged="dataGridTables_SelectionChanged">
-                                        <DataGrid.Resources>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightBlue"/>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="white"/>
-                                        </DataGrid.Resources>
-                                        <DataGrid.ColumnHeaderStyle>
-                                            <Style TargetType="{x:Type DataGridColumnHeader}">
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                            </Style>
-                                        </DataGrid.ColumnHeaderStyle>
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table Name" Width="100*" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold"/>
-											<!--<DataGridTextColumn Binding="{Binding KeyColumns}" ClipboardContentBinding="{x:Null}" Header="Keys" Width="70*" IsReadOnly="True" Foreground="#FF114900"/>-->
-											<DataGridTextColumn Binding="{Binding Rows}" ClipboardContentBinding="{x:Null}" Header="Rows" Width="25*" IsReadOnly="True" Foreground="#FF114900"/>
-										</DataGrid.Columns>
-                                        <DataGrid.DataContext>
-                                            <Models:DatabaseViewModel/>
-                                        </DataGrid.DataContext>
-                                    </DataGrid>
-
-                                </Grid>
-                            </xcad:LayoutDocument>
-
-                        </xcad:LayoutDocumentPane>
-
-                        <xcad:LayoutDocumentPane DockWidth="533*" DockMinWidth="533">
-                            <xcad:LayoutDocument x:Name="docColumns" CanClose="False" Title="Columns" IconSource="../Images/VS/Column_16x.png">
-                                <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-
-                                    <DataGrid x:Name="dataGridColumns" CanUserAddRows="False" HorizontalScrollBarVisibility="Auto" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" Margin="0,35,0.2,-0.2" RowHeight="22" Width="Auto" FontSize="12">
-                                        <DataGrid.Resources>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightSkyBlue"/>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="white"/>
-                                        </DataGrid.Resources>
-                                        <DataGrid.ColumnHeaderStyle>
-                                            <Style TargetType="{x:Type DataGridColumnHeader}">
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                            </Style>
-                                        </DataGrid.ColumnHeaderStyle>
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn x:Name="columnDatabaseName" Binding="{Binding DatabaseName}" ClipboardContentBinding="{x:Null}" Header="Database Name" Width="60*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold" Visibility="Hidden"/>
-                                            <DataGridTextColumn x:Name="columnTableName" Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table Name" Width="100*" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold" Visibility="Hidden"/>
-                                            <DataGridTextColumn Binding="{Binding ColumnName}" ClipboardContentBinding="{x:Null}" Header="Column Name" Width="75*" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
-                                            <!--<DataGridTextColumn Binding="{Binding ColumnDescription}" ClipboardContentBinding="{x:Null}" Header="Description" Width="75*" IsReadOnly="True" Foreground="#FF00067A"/>-->
-                                            <DataGridTextColumn Binding="{Binding DataType}" ClipboardContentBinding="{x:Null}" Header="DataType" Width="40*" IsReadOnly="True"/>
-                                            <!--<DataGridTextColumn Binding="{Binding OrdinalPosition}" ClipboardContentBinding="{x:Null}" Header="Position" Width="13*" IsReadOnly="True"/>
-                                                <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Length" Width="30*" IsReadOnly="True"/>-->
-                                            <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Len" Width="55" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
-                                            <DataGridTextColumn Binding="{Binding Precision}" ClipboardContentBinding="{x:Null}" Header="Precision" Width="60" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
-                                            <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="Nullable" Width="22*" IsReadOnly="True"/>
-                                            <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="Identity" Width="20*" IsReadOnly="True"/>
-                                            <DataGridTextColumn Binding="{Binding PredefinedAcceptableValues}" ClipboardContentBinding="{x:Null}" Header="Acceptable Values" Width="50*" IsReadOnly="True"/>
-                                            <!--<DataGridTextColumn Binding="{Binding IndexNames}" ClipboardContentBinding="{x:Null}" Header="Indexes" Width="100*" IsReadOnly="True" />-->
-                                        </DataGrid.Columns>
-                                        <DataGrid.DataContext>
-                                            <Models:DatabaseViewModel/>
-                                        </DataGrid.DataContext>
-                                    </DataGrid>
-
-                                    <Button x:Name="btnFindTablesContainingColumn" Content="Show Tables With Column" HorizontalAlignment="Left" Width="160" Click="btnFindTablesContainingColumn_Click" Height="22" VerticalAlignment="Top" Margin="9,8,0,0">
-                                        <Button.Background>
-                                            <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
-                                                <GradientStop Color="#FFF3F3F3" Offset="0"/>
-                                                <GradientStop Color="#FFEBEBEB"/>
-                                                <GradientStop Color="#FFDDDDDD"/>
-                                                <GradientStop Color="#FF73D647" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Button.Background>
-                                    </Button>
-                                </Grid>
-                            </xcad:LayoutDocument>
-                        </xcad:LayoutDocumentPane>
-
-                        <xcad:LayoutDocumentPane DockWidth="990*" DockMinWidth="990">
-
-                            <xcad:LayoutDocument x:Name="docAllObjects" CanClose="False" Title=" All Objects  " IconSource="../Images/VS/ToggleWorld_16x.png" >
-                                <Grid Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0.2,0.2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*" />
-                                    </Grid.RowDefinitions>
-
-                                    <DataGrid x:Name="databaseGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,35,0.2,0.2" Height="Auto" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="19" Background="#FFF0F0F0" FontSize="11">
-                                        <DataGrid.Resources>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightSkyBlue"/>
-                                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="white"/>
-                                        </DataGrid.Resources>
-                                        <DataGrid.ColumnHeaderStyle>
-                                            <Style TargetType="{x:Type DataGridColumnHeader}">
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                            </Style>
-                                        </DataGrid.ColumnHeaderStyle>
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table Name" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
-                                            <DataGridTextColumn Binding="{Binding ColumnName}" ClipboardContentBinding="{x:Null}" Header="Column Name" Width="100*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
-                                            <DataGridTextColumn Binding="{Binding DataType}" ClipboardContentBinding="{x:Null}" Header="DataType" Width="40*" IsReadOnly="True"/>
-                                            <!--<DataGridTextColumn Binding="{Binding OrdinalPosition}" ClipboardContentBinding="{x:Null}" Header="Position" Width="13*" IsReadOnly="True"/>
-                                            <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Length" Width="30*" IsReadOnly="True"/>-->
-                                            <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Len" Width="55" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
-                                            <DataGridTextColumn Binding="{Binding Precision}" ClipboardContentBinding="{x:Null}" Header="Precision" Width="60" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
-                                            <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="Nullable" Width="22*" IsReadOnly="True"/>
-                                            <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="Identity" Width="20*" IsReadOnly="True"/>
-                                            <!--<DataGridTextColumn Binding="{Binding PredefinedAcceptableValues}" ClipboardContentBinding="{x:Null}" Header="Acceptable Values" Width="50*" IsReadOnly="True"/>-->
-                                        </DataGrid.Columns>
-                                        <DataGrid.DataContext>
-                                            <Models:DatabaseViewModel/>
-                                        </DataGrid.DataContext>
-                                    </DataGrid>
-
-                                    <Controls:SearchControl x:Name="allObjectsSearchCtl"  HorizontalAlignment="Left" Width="195" Margin="0, 5, 0, 0" VerticalAlignment="Top" TextChanged="allObjectsSearchCtl_TextChanged"/>
-                                    <RadioButton x:Name="rbTables" Content="Tables" Margin="207,10,0,0" VerticalAlignment="Top" FontWeight="Bold" IsChecked="True" Checked="rbTables_Checked" HorizontalAlignment="Left" Width="54"/>
-                                    <RadioButton x:Name="rbColumns" Content="Columns" Margin="275,10,0,0" VerticalAlignment="Top" FontWeight="Bold" Checked="rbColumns_Checked" HorizontalAlignment="Left" Width="67"/>
-                                    <RadioButton x:Name="rbTablesAndColumns" Content="Both" Margin="357,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" FontWeight="Bold" Checked="rbTablesAndColumns_Checked"/>
-
-                                    <Button x:Name="btnGoToTable" Content="Go To Table" Margin="0,7,25,0" HorizontalAlignment="Right"  Click="btnGoToTable_Click" Height="22" VerticalAlignment="Top" Width="140">
-                                        <Button.Background>
-                                            <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
-                                                <GradientStop Color="#FFF3F3F3" Offset="0"/>
-                                                <GradientStop Color="#FFEBEBEB"/>
-                                                <GradientStop Color="#FFDDDDDD"/>
-                                                <GradientStop Color="#FF73D647" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Button.Background>
-                                    </Button>
-                                </Grid>
-                            </xcad:LayoutDocument>
-
-                        </xcad:LayoutDocumentPane>
-                        
-                    </xcad:LayoutDocumentPaneGroup>
-                    
-                    <xcad:LayoutDocumentPaneGroup>
-                        
-                        <xcad:LayoutDocumentPane x:Name="docPaneQueryResults">
-                            <xcad:LayoutDocument CanClose="False" x:Name="docQueryResults" ContentId="document1" Title="Query Results" IconSource="../Images/VS/Watch_16x.png"  >
-                                <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-
-                                    <DataGrid x:Name="dataGridQueryResults" SelectionUnit="FullRow" HorizontalAlignment="Stretch" Margin="0,0,0,0" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="True" AlternationCount="2" AlternatingRowBackground ="Ivory"  RowHeight="22" Background="#FFF0F0F0" FontSize="12" ItemsSource="{Binding}" IsReadOnly="True">
-                                        <DataGrid.ColumnHeaderStyle>
-                                            <Style TargetType="{x:Type DataGridColumnHeader}">
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                            </Style>
-                                        </DataGrid.ColumnHeaderStyle>
-                                    </DataGrid>
-                                </Grid>
-                            </xcad:LayoutDocument>
-                        </xcad:LayoutDocumentPane>
-                        
-                        <xcad:LayoutDocumentPane x:Name="docPaneQueryEditor">
-                            <xcad:LayoutDocument x:Name="docQueryEditor" CanClose="False" ContentId="document1" Title="Query Editor" IconSource="../Images/VS/AzureSQLDatabase_color_16x.png"  >
-                                <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-
-                                    <avalonEdit:TextEditor x:Name="txtQuery"
-                                                           Background="GhostWhite"
-				                            FontFamily="Consolas"
-				                            FontSize="10pt"
-				                            SyntaxHighlighting="SQL"
-                                            ShowLineNumbers="True" Margin="0,0,0,32.8" />
-                                    <Button x:Name="btnExecuteQuery" Content="Execute Query" Margin="10,0,0,6.2" Click="BtnExecuteQuery_Click" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="139">
-                                        <Button.Background>
-                                            <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
-                                                <GradientStop Color="#FFF3F3F3" Offset="0"/>
-                                                <GradientStop Color="#FFEBEBEB"/>
-                                                <GradientStop Color="#FFDDDDDD"/>
-                                                <GradientStop Color="#FF73D647" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Button.Background>
-                                    </Button>
-
-                                    <CheckBox x:Name="chkAutoGenerateQueryJoins" Content="Auto-Generate Query Joins" Margin="159,0,0,6.8" Unchecked="ChkAutoGenerateQueryJoins_Unchecked" Checked="ChkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
-                                </Grid>
-                            </xcad:LayoutDocument>
-                        </xcad:LayoutDocumentPane>
-                        
-                    </xcad:LayoutDocumentPaneGroup>
-                    
                 </xcad:LayoutPanel>
 
+                <xcad:LayoutRoot.LeftSide>
+
+                    <xcad:LayoutAnchorSide>
+
+                        <xcad:LayoutAnchorGroup>
+
+                            <xcad:LayoutAnchorable x:Name="pnPutStuffHere" Title="Put Stuff Here" CanClose="False"  ContentId="agenda" IconSource="../Images/VS/Search_16x.png" CanHide="False" CanAutoHide="True" IsMaximized="False" AutoHideMinWidth="250" AutoHideWidth="700">
+
+                            </xcad:LayoutAnchorable>
+
+                        </xcad:LayoutAnchorGroup>
+
+                    </xcad:LayoutAnchorSide>
+
+                </xcad:LayoutRoot.LeftSide>
             </xcad:LayoutRoot>
+
         </xcad:DockingManager>
     </Grid>
 </UserControl>
