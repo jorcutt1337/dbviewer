@@ -202,6 +202,9 @@ namespace DBViewer.WPF.Controls
             // Validation
             if (dataGridTables.SelectedItem == null) { return; }
 
+            var singleLine = chkAutoGenerateSelects1Line.IsChecked == true;
+            var singleLineTT = (singleLine == false ? "" : "\t\t");
+
             const string RN = "\r\n";
             const string RNT = RN + "\t";
 
@@ -227,7 +230,7 @@ namespace DBViewer.WPF.Controls
                 Clause = "\tLEFT JOIN " + v.Key.ForeignTableName + " X" + (i + 1) + " ON " + string.Join(" AND ", v.Select(x => "X" + (i + 1) + "." + x.ForeignTableColumnName + " = X." + col.ColumnName).Distinct())
             }).ToList();
 
-            var relatedTableColumnsSelect = RN + string.Join("," + RN, relatedTableColumns.Select((v, i) => string.Join("," + "\r\n", v.OrderBy(x => x.OrdinalPosition).Select(x => "\t\t" + "X" + (i + 1) + "." + x.ColumnName)))).TrimEnd('\r').TrimEnd('\n').TrimEnd(',');
+            var relatedTableColumnsSelect = RN + singleLineTT + string.Join("," + RN + singleLineTT, relatedTableColumns.Select((v, i) => string.Join("," + (singleLine == false ? RN : " "), v.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? "\t\t" : "") + "X" + (i + 1) + "." + x.ColumnName)))).TrimEnd('\r').TrimEnd('\n').TrimEnd(',');
 
             columnDatabaseName.Visibility = Visibility.Hidden;
             columnTableName.Visibility = Visibility.Hidden;
@@ -239,7 +242,7 @@ namespace DBViewer.WPF.Controls
             {
                 query +=
                 "\t" + "SELECT TOP 1000" + RN +
-                String.Join("," + RN, tableColumns.OrderBy(v => v.OrdinalPosition).Select(v => "\t\t" + "X." + v.ColumnName).Distinct().ToList()) +
+                singleLineTT + String.Join("," + (singleLine == false ? RN : ""), tableColumns.OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? "\t\t" : " ") + "X." + v.ColumnName).Distinct().ToList()) +
                 (relatedTableColumnsSelect.Replace(RN, "").Length > 0 ? "," + relatedTableColumnsSelect.TrimEnd('\r').TrimEnd('\n').TrimEnd(',') : "") +
                 RNT + "FROM " + table.TableName + " X" +
                 RNT + string.Join(RNT, tableJoins.Select(v => v.Clause)) +
@@ -251,7 +254,7 @@ namespace DBViewer.WPF.Controls
                 data = this._Columns.Where(r => r.TableName == table.TableName).Distinct().ToList();
                 query +=
                 "\t" + "SELECT TOP 1000" + RN +
-                String.Join("," + RN, data.Where(v => v.ColumnName != null && v.ColumnName != string.Empty).OrderBy(v => v.OrdinalPosition).Select(v => "\t\t" + "X." + v.ColumnName)) +
+                singleLineTT + String.Join("," + (singleLine == false ? RN : ""), data.Where(v => v.ColumnName != null && v.ColumnName != string.Empty).OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? "\t\t" : " ") + "X." + v.ColumnName)) +
                 RNT + "FROM " + table.TableName + " X" +
                 RNT + "" +
                 RNT;

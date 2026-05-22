@@ -7,10 +7,10 @@
              d:DesignHeight="25" d:DesignWidth="100">
 
     <Grid>
-        <TextBox x:Name="txtSearch" Height="25" TextWrapping="Wrap" Text="" VerticalAlignment="Top" FontStyle="Normal" Foreground="Black" TextChanged="txtSearch_TextChanged" Margin="51,0,0.2,-0.2" HorizontalContentAlignment="Stretch" MaxLength="150"/>
-        <Image Source="../Images/VS/Search_16x.png" Width="20" Height="20" Margin="150,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Hidden">
+        <TextBox x:Name="txtSearch" Height="25" Width="130" TextWrapping="Wrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" FontStyle="Normal" Foreground="Black" TextChanged="txtSearch_TextChanged" Margin="3,0,0.2,-0.2" HorizontalContentAlignment="Stretch" MaxLength="150"/>
+        <Image Source="../Images/VS/Search_16x.png" Width="20" Height="20" Margin="135,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Hidden">
         </Image>
-        <Label x:Name="label" Content="Search:" HorizontalAlignment="Left" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label x:Name="label" Content="Search:" HorizontalAlignment="Left" VerticalAlignment="Top" FontWeight="Bold" Visibility="Hidden"/>
     </Grid>
 
 </UserControl>

@@ -55,7 +55,7 @@
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal" >
                             <Image Width="17" Height="17" Source="/Images/VS/CPPSQLProject_16x.png" VerticalAlignment="Bottom"/>
-                            <TextBlock Text=" Database Viewer" Foreground="Navy" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="txtDatabaseName" Text=" Database Viewer" Foreground="Navy" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </TabItem.Header>
                     <Grid>
