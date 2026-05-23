@@ -80,11 +80,16 @@ namespace DBViewer.WPF
 		ForeignTableName, 
 		FK.constraint_column_id";
 
-		#endregion
+        #endregion
 
-		#region Keywords
+        #region Keywords
 
-		private static readonly List<string> SqlReservedKeywordsAction = new List<string>()
+        public static readonly List<string> SqlNonPrimitiveDataTypes = new List<string>()
+        {
+            "FLAG", "HIERARCHYID", "GEOGRAPHY", "GEOMETRY"
+        };
+
+        private static readonly List<string> SqlReservedKeywordsAction = new List<string>()
 		{
             "ADD", "ALTER", "CREATE", "DELETE", "DROP", "INSERT", "SELECT", "UPDATE"
         };

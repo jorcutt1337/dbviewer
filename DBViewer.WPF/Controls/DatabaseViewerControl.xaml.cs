@@ -368,7 +368,8 @@ namespace DBViewer.WPF.Controls
             // Loop Parent Relationships With Inner Joins
             foreach (var key in tableModel.RelationsUp)
             {
-                var relatedTableColumns = new List<SchemaViewModel>() { key.PrimaryColumn }.Concat(key.PrimaryColumn.OtherTableColumns).Distinct().ToList();
+                var relatedTableColumns = new List<SchemaViewModel>() { key.PrimaryColumn }.Concat(key.PrimaryColumn.OtherTableColumns)
+                    .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
 
                 // Add Related Parent Table Join
                 relatedTableJoins.Add(TB + "INNER JOIN " + key.PrimaryTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.PrimaryTableColumnName + " = " + "X." + key.ForeignTableColumnName);
@@ -383,7 +384,8 @@ namespace DBViewer.WPF.Controls
             // Loop Child Relationships With Left Joins
             foreach (var key in tableModel.RelationsDown)
             {
-                var relatedTableColumns = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns).Distinct().ToList();
+                var relatedTableColumns = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns)
+                    .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
 
                 // Add Related Child Table Join
                 relatedTableJoins.Add(TB + "LEFT JOIN " + key.ForeignTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.ForeignTableColumnName + " = " + "X." + key.PrimaryTableColumnName);
@@ -399,7 +401,8 @@ namespace DBViewer.WPF.Controls
             relatedTableColumnsSelect = relatedTableColumnsSelect.TrimEnd(',');
 
             // Get Primary Table Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects'
-            var primaryColumns = tableModel.Columns.OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? TB + TB : " ") + "X." + v.ColumnName).Distinct().ToList();
+            var primaryColumns = tableModel.Columns.Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper()))
+                .OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? TB + TB : " ") + "X." + v.ColumnName).Distinct().ToList();
 
             // If Auto-Generate Query Joins
             if (chkAutoGenerateQueryJoins.IsChecked == true)
