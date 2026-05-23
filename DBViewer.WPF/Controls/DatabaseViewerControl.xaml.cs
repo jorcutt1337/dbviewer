@@ -365,37 +365,115 @@ namespace DBViewer.WPF.Controls
             var relatedTableJoins = new List<string>();
             var relatedTableIndex = 2;
 
-            // Loop Parent Relationships With Inner Joins
-            foreach (var key in tableModel.RelationsUp)
+            if (nudDefaultRelationsipsUp.Value >= 1)
             {
-                var relatedTableColumns = new List<SchemaViewModel>() { key.PrimaryColumn }.Concat(key.PrimaryColumn.OtherTableColumns)
-                    .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
+                // Loop Parent Relationships With Inner Joins
+                foreach (var key in tableModel.RelationsUp)
+                {
+                    var relatedTableColumns = new List<SchemaViewModel>() { key.PrimaryColumn }.Concat(key.PrimaryColumn.OtherTableColumns)
+                        .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
 
-                // Add Related Parent Table Join
-                relatedTableJoins.Add(TB + "INNER JOIN " + key.PrimaryTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.PrimaryTableColumnName + " = " + "X." + key.ForeignTableColumnName);
+                    // Add Related Parent Table Join
+                    relatedTableJoins.Add(TB + "INNER JOIN " + key.PrimaryTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.PrimaryTableColumnName + " = " + "X." + key.ForeignTableColumnName);
 
-                // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
-                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
-                relatedTableIndex++;
+                    // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
+                    relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
+                    relatedTableIndex++;
 
-                Console.WriteLine($"Primary: {key.ForeignTableName}.{key.ForeignTableColumnName} -> Foreign: {key.PrimaryTableName}.{key.PrimaryTableColumnName}");
+                    Debug.WriteLine($"Primary: {key.ForeignTableName}.{key.ForeignTableColumnName} -> Foreign: {key.PrimaryTableName}.{key.PrimaryTableColumnName}");
+                }
             }
 
-            // Loop Child Relationships With Left Joins
-            foreach (var key in tableModel.RelationsDown)
+            // TODO: This Actually Works... Need To Do More Testing With Deeper Relationships On Different Databases
+
+            if (nudDefaultRelationsipsDown.Value >= 1)
             {
-                var relatedTableColumns = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns)
-                    .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
+                // Recursively Get Child Relationship Segments (Joins And Selects) To Specified Level Down
+                var segments = GetQueryRelationsDown(tableModel, 0, nudDefaultRelationsipsDown.Value.GetValueOrDefault(), singleLine);
 
-                // Add Related Child Table Join
-                relatedTableJoins.Add(TB + "LEFT JOIN " + key.ForeignTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.ForeignTableColumnName + " = " + "X." + key.PrimaryTableColumnName);
+                // Keep Track Of Tables We've Already Added To The Query So We Can Alias Them Correctly When They Come Up Again In Deeper Relationships (e.g. Table A Joins To B Which Joins Back To A - We Don't Want To Alias The First A As X And The Second A As X2, We Want Both To Be X With The Correct Joins/Selects)
+                var newTables = new List<KeyValuePair<string, string>>() { new KeyValuePair<string, string>(tableModel.TableName, alias) };
 
-                // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
-                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
-                relatedTableIndex++;
+                // Loop Child Relationships With Left Joins
+                foreach (var segment in segments)
+                {
+                    // Validation - If Table Already Been Added As Join Then Don't Add Again, Just Alias In Joins/Selects (Prevents Circular Relationship Issues)
+                    if (segment.PrimaryTableName != tableModel.TableName && !newTables.Any(v => v.Key == segment.PrimaryTableName))
+                    {
+                        // Add Related Child Table Join
+                        newTables.Add(new KeyValuePair<string, string>(segment.PrimaryTableName, alias + (relatedTableIndex - 1)));
+                    }
 
-                Console.WriteLine($"Primary: {key.PrimaryTableName}.{key.PrimaryTableColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignTableColumnName}");
+                    // Replace Foreign Table Name Placeholder With Proper Foreign Table Alias In SELECT
+                    var updatedSelect = segment.Selects.Replace("[" + segment.ForeignTableName + "]", alias + relatedTableIndex);
+
+                    // Replace Primary Table Name Placeholder With Proper Primary Table Alias In SELECT
+                    updatedSelect = updatedSelect.Replace("[" + tableModel.TableName + "]", alias);
+
+                    // Replace Foreign Table Name Placeholder With Proper Foreign Table Alias In JOIN
+                    var updatedJoin = segment.Joins.Replace("[" + segment.ForeignTableName + "]", alias + relatedTableIndex);
+
+                    // Check For Match In The List Were Tracking
+                    var match = newTables.FirstOrDefault(v => v.Key == segment.PrimaryTableName);
+
+                    // Validation - If Primary Table Placeholder Exists
+                    if (match.Key == segment.PrimaryTableName && segment.Joins.Contains("[" + segment.PrimaryTableName + "]"))
+                    {
+                        // Replace Primary Table Placeholder With Proper Primary Table Alias In JOIN
+                        updatedJoin = updatedJoin.Replace("[" + segment.PrimaryTableName + "]", match.Value);
+                    }
+
+                    relatedTableColumnsSelect += updatedSelect;
+                    relatedTableJoins.Add(updatedJoin);
+                    relatedTableIndex++;
+
+                }
             }
+
+            //var primTables = segments.Select(v => v.PrimaryTableName).Distinct().ToList();
+            //var forTables = segments.Select(v => v.ForeignTableName).Distinct().ToList();
+            //var allTables = primTables.Concat(forTables).Order().Select((v, i) => new
+            //{
+            //    Table = v,
+            //    Index = i + 1
+            //}).ToList();
+
+            //if (nudDefaultRelationsipsDown.Value >= 1)
+            //{
+            //    // Loop Child Relationships With Left Joins
+            //    foreach (var key in tableModel.RelationsDown)
+            //    {
+            //        var relatedTableColumns = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns)
+            //            .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
+
+            //        // Add Related Child Table Join
+            //        relatedTableJoins.Add(TB + "LEFT JOIN " + key.ForeignTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.ForeignTableColumnName + " = " + "X." + key.PrimaryTableColumnName);
+
+            //        // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
+            //        relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
+            //        relatedTableIndex++;
+
+            //        Console.WriteLine($"Primary: {key.PrimaryTableName}.{key.PrimaryTableColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignTableColumnName}");
+            //        if (nudDefaultRelationsipsDown.Value >= 2)
+            //        {
+            //            var find = _Models.First(v => v.TableName == key.ForeignTableName);
+            //            foreach (var key2 in find.RelationsDown)
+            //            {
+            //                var relatedTableColumns2 = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns)
+            //                    .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
+
+            //                // Add Related Child Table Join
+            //                relatedTableJoins.Add(TB + "LEFT JOIN " + key2.ForeignTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key2.ForeignTableColumnName + " = " + "X." + key2.PrimaryTableColumnName);
+
+            //                // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
+            //                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns2.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
+            //                relatedTableIndex++;
+
+            //                Console.WriteLine($"Primary: {key2.PrimaryTableName}.{key2.PrimaryTableColumnName} -> Foreign: {key2.ForeignTableName}.{key2.ForeignTableColumnName}");
+            //            }
+            //        }
+            //    }
+            //}
 
             // Kill Any Trailing Comma Before "FROM" Clause
             relatedTableColumnsSelect = relatedTableColumnsSelect.TrimEnd(',');
@@ -422,6 +500,69 @@ namespace DBViewer.WPF.Controls
             txtQuery.Text = query + RNT + RNT;
             docColumns.Title = table.TableName;
             gridColumns.ItemsSource = new ObservableCollection<SchemaViewModel>(tableModel.Columns);
+        }
+
+        record QueryGen(string PrimaryTableName, string ForeignTableName, string Selects, string Joins);
+
+        private List<QueryGen> GetQueryRelationsDown(SchemaModel model, int level, int stopAfter, bool singleLine, List<QueryGen> queries = null)
+        {
+            // Constants To Avoid Hardcoding
+            const string TB = "\t";
+            const string RN = "\r\n";
+            var SLTT = (singleLine == false ? string.Empty : TB + TB);
+
+            // Default Return Query Segments
+            queries = queries ?? new List<QueryGen>();
+
+            // Loop Child Relationships With Left Joins
+            foreach (var key in model.RelationsDown)
+            {
+                var relatedTableColumns = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns)
+                    .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
+
+                // Add Related Child Table Join
+                var joins = TB + "LEFT JOIN " + key.ForeignTableName + " [" + key.ForeignTableName + "] ON [" + key.ForeignTableName + "]." + key.ForeignTableColumnName + " = [" + key.PrimaryTableName + "]." + key.PrimaryTableColumnName;
+
+                // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
+                var selects = RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "[" + key.ForeignTableName + "]." + x.ColumnName)) + ",";
+
+                // Add Query Segments To Return List
+                queries.Add(new QueryGen(key.PrimaryTableName, key.ForeignTableName, selects, joins));
+                level++;
+
+                // Check If Keep Going Down
+                if (level < stopAfter)
+                {
+                    // Find Next Level Down
+                    var find = _Models.First(v => v.TableName == key.ForeignTableName);
+
+                    // Validation - If Table Already Been Added As Join Then Don't Recurse Down That Path Again (Prevents Circular Relationship Issues)
+                    if (queries.Any(v => v.PrimaryTableName == find.TableName)) { continue; }
+
+                    // Recurse
+                    var nextLevelDownQueries = GetQueryRelationsDown(find, level, stopAfter, singleLine, queries);
+
+                    // Loop 
+                    foreach (var query in nextLevelDownQueries)
+                    {
+                        // Validation?
+                        if (queries.Any(v => v.PrimaryTableName == query.PrimaryTableName && v.ForeignTableName == query.ForeignTableName)) 
+                        {
+                            Debug.WriteLine(DateTime.Now + " - " + query.PrimaryTableName + ", " + query.ForeignTableName);
+                            continue;
+                        }
+                        queries.Add(query);
+                    }
+                }
+                else
+                {
+                    continue;
+                }
+
+                Console.WriteLine($"Primary: {key.PrimaryTableName}.{key.PrimaryTableColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignTableColumnName}");
+            }
+
+            return queries;
         }
 
         private void ExecuteQuery(string query)
