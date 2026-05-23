@@ -73,7 +73,7 @@ namespace DBViewer.WPF.Controls
                         columns = DataUtility.GetInstances<SchemaViewModel>(SqlConstants.SchemaQuery);
                         keys = DataUtility.GetInstances<RelationViewModel>(SqlConstants.TableRelationsQuery);
 
-                        var data = new SchemaXmlData()
+                        var data = new SchemaXmlModel()
                         {
                             Columns = columns,
                             Keys = keys
@@ -87,7 +87,7 @@ namespace DBViewer.WPF.Controls
                     else
                     {
                         var xmlContent = File.ReadAllText(xmlFile.FullName);
-                        var data = XmlExtenstions.Deserialize<SchemaXmlData>(xmlContent);
+                        var data = XmlExtenstions.Deserialize<SchemaXmlModel>(xmlContent);
                         columns = data.Columns;
                         keys = data.Keys;
                     }
@@ -342,78 +342,83 @@ namespace DBViewer.WPF.Controls
         {
             if (gridTables.SelectedItem == null) { return; }
 
+            // Constants To Avoid Hardcoding
             const string TB = "\t";
             const string RN = "\r\n";
             const string RNT = RN + TB;
+            const string FROM = "FROM ";
+            string alias = Globals.DefaultSqlAlias.Length > 0 ? Globals.DefaultSqlAlias : "X";
 
             var singleLine = chkAutoGenerateSelects1Line.IsChecked == true;
             var SLTT = (singleLine == false ? string.Empty : TB + TB);
 
+            // Get Selected Table Model
             var table = (SchemaViewModel)this.gridTables.SelectedItem;
             var tableModel = this._Models.FirstOrDefault(m => m.TableName == table.TableName);
-
-            var relatedTableColumnsSelect = string.Empty;
-            var relatedTableJoins = new List<string>();
-
-            var idx = 2;
-
             if (tableModel == null) { throw new InvalidOperationException("Table model not found."); }
 
+            // Query We Are Going To Build Eventually
+            var query = "USE " + table.DatabaseName + RN + RNT + SqlConstants.SelectTop1000 + RN;
+
+            // Keep Track Of Related Tables Were Gonna Include. Base Table Alias = 'X'. So Start Next Table As 'X2' Then 'X3' etc.
+            var relatedTableColumnsSelect = string.Empty;
+            var relatedTableJoins = new List<string>();
+            var relatedTableIndex = 2;
+
+            // Loop Parent Relationships With Inner Joins
             foreach (var key in tableModel.RelationsUp)
             {
                 var relatedTableColumns = new List<SchemaViewModel>() { key.PrimaryColumn }.Concat(key.PrimaryColumn.OtherTableColumns).Distinct().ToList();
 
-                relatedTableJoins.Add(TB + "INNER JOIN " + key.PrimaryTableName + " X" + idx + " ON " + "X" + idx + "." + key.PrimaryTableColumnName + " = " + "X." + key.ForeignTableColumnName);
+                // Add Related Parent Table Join
+                relatedTableJoins.Add(TB + "INNER JOIN " + key.PrimaryTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.PrimaryTableColumnName + " = " + "X." + key.ForeignTableColumnName);
 
-                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + idx + "." + x.ColumnName));
-                relatedTableColumnsSelect += ",";
-                idx++;
+                // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
+                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
+                relatedTableIndex++;
 
                 Console.WriteLine($"Primary: {key.ForeignTableName}.{key.ForeignTableColumnName} -> Foreign: {key.PrimaryTableName}.{key.PrimaryTableColumnName}");
             }
 
+            // Loop Child Relationships With Left Joins
             foreach (var key in tableModel.RelationsDown)
             {
                 var relatedTableColumns = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns).Distinct().ToList();
 
-                relatedTableJoins.Add(TB + "LEFT JOIN " + key.ForeignTableName + " X" + idx + " ON " + "X" + idx + "." + key.ForeignTableColumnName + " = " + "X." + key.PrimaryTableColumnName);
+                // Add Related Child Table Join
+                relatedTableJoins.Add(TB + "LEFT JOIN " + key.ForeignTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.ForeignTableColumnName + " = " + "X." + key.PrimaryTableColumnName);
 
-                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + idx + "." + x.ColumnName));
-                relatedTableColumnsSelect += ",";
-                idx++;
+                // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
+                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
+                relatedTableIndex++;
 
                 Console.WriteLine($"Primary: {key.PrimaryTableName}.{key.PrimaryTableColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignTableColumnName}");
             }
 
+            // Kill Any Trailing Comma Before "FROM" Clause
             relatedTableColumnsSelect = relatedTableColumnsSelect.TrimEnd(',');
 
-            columnDatabaseName.Visibility = Visibility.Hidden;
-            columnTableName.Visibility = Visibility.Hidden;
-
-            var query = "USE " + table.DatabaseName + RN + RN + "\t" + SqlConstants.SelectTop1000 + RN;
-
+            // Get Primary Table Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects'
             var primaryColumns = tableModel.Columns.OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? TB + TB : " ") + "X." + v.ColumnName).Distinct().ToList();
 
-            if (this.chkAutoGenerateQueryJoins.IsChecked == true)
+            // If Auto-Generate Query Joins
+            if (chkAutoGenerateQueryJoins.IsChecked == true)
             {
                 query += SLTT + String.Join("," + (singleLine == false ? RN : ""), primaryColumns) +
                 (chkInclJoinSelects.IsChecked == false ? "" : (relatedTableColumnsSelect.Replace(RN, "").Length > 0 ? "," + relatedTableColumnsSelect.TrimEnd('\r').TrimEnd('\n').TrimEnd(',') : "")) +
-                RNT + "FROM " + table.TableName + " X" +
+                RNT + FROM + table.TableName + " X" +
                 RNT + string.Join(RNT, relatedTableJoins);
             }
             else
             {
                 query +=
                 SLTT + String.Join("," + (singleLine == false ? RN : ""), primaryColumns) +
-                RNT + "FROM " + table.TableName + " X";
+                RNT + FROM + table.TableName + " X";
             }
 
-            this.txtQuery.Text = query + RNT + RNT;
-            this.docColumns.Title = table.TableName;
-
+            txtQuery.Text = query + RNT + RNT;
+            docColumns.Title = table.TableName;
             gridColumns.ItemsSource = new ObservableCollection<SchemaViewModel>(tableModel.Columns);
-            columnDatabaseName.Visibility = Visibility.Hidden;
-            columnTableName.Visibility = Visibility.Hidden;
         }
 
         private void ExecuteQuery(string query)

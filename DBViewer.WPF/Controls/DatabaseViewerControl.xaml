@@ -30,16 +30,16 @@
                 <xcad:LayoutPanel Orientation="Horizontal">
 
                     <!-- LEFT SIDE -->
-                    <xcad:LayoutPanel Orientation="Vertical" DockWidth="1300*">
+                    <xcad:LayoutPanel Orientation="Vertical" DockWidth="1300" DockMinWidth="800">
 
                         <!-- TOP ROW -->
                         <xcad:LayoutPanel Orientation="Horizontal">
 
                             <!-- TABLES -->
-                            <xcad:LayoutDocumentPaneGroup DockWidth="1.5*" DockMinWidth="225">
+                            <xcad:LayoutDocumentPaneGroup DockWidth=".3*" DockMinWidth="225">
                                 <xcad:LayoutDocumentPane>
                                     <xcad:LayoutDocument x:Name="docTables" CanClose="False" Title=" Tables  " IconSource="../Images/VS/Table_16x.png" >
-                                        <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Left" VerticalAlignment="Stretch">
+                                        <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
@@ -64,9 +64,9 @@
                                                     </Style>
                                                 </DataGrid.ColumnHeaderStyle>
                                                 <DataGrid.Columns>
-                                                    <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="90*" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold"/>
+                                                    <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="Auto" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold"/>
                                                     <!--<DataGridTextColumn Binding="{Binding KeyColumns}" ClipboardContentBinding="{x:Null}" Header="Keys" Width="70*" IsReadOnly="True" Foreground="#FF114900"/>-->
-                                                    <DataGridTextColumn Binding="{Binding Rows}" ClipboardContentBinding="{x:Null}" Header="#" Width="12*" IsReadOnly="True" Foreground="#FF114900"/>
+                                                    <!--<DataGridTextColumn Binding="{Binding Rows}" ClipboardContentBinding="{x:Null}" Header="#" Width="12*" IsReadOnly="True" Foreground="#FF114900"/>-->
                                                 </DataGrid.Columns>
                                                 <DataGrid.DataContext>
                                                     <Models:SchemaViewModel/>
@@ -80,7 +80,7 @@
                             </xcad:LayoutDocumentPaneGroup>
 
                             <!-- COLUMNS -->
-                            <xcad:LayoutDocumentPaneGroup DockWidth="3*" DockMinWidth="300">
+                            <xcad:LayoutDocumentPaneGroup DockWidth="1*" DockMinWidth="350">
                                 <xcad:LayoutDocumentPane>
                                     <xcad:LayoutDocument x:Name="docColumns" CanClose="False" Title="Columns" IconSource="../Images/VS/Column_16x.png">
                                         <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -104,16 +104,16 @@
                                                 </DataGrid.ColumnHeaderStyle>
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn x:Name="columnDatabaseName" Binding="{Binding DatabaseName}" ClipboardContentBinding="{x:Null}" Header="Database" Width="60*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold" Visibility="Hidden"/>
-                                                    <DataGridTextColumn x:Name="columnTableName" Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="100*" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold" Visibility="Hidden"/>
-                                                    <DataGridTextColumn Binding="{Binding ColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="65*" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
+                                                    <DataGridTextColumn x:Name="columnTableName" Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="Auto" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold" Visibility="Hidden"/>
+                                                    <DataGridTextColumn Binding="{Binding ColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="Auto" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
                                                     <!--<DataGridTextColumn Binding="{Binding ColumnDescription}" ClipboardContentBinding="{x:Null}" Header="Description" Width="75*" IsReadOnly="True" Foreground="#FF00067A"/>-->
                                                     <DataGridTextColumn Binding="{Binding DataType}" ClipboardContentBinding="{x:Null}" Header="Type" Width="25*" IsReadOnly="True"/>
                                                     <!--<DataGridTextColumn Binding="{Binding OrdinalPosition}" ClipboardContentBinding="{x:Null}" Header="Position" Width="13*" IsReadOnly="True"/>
                      <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Length" Width="30*" IsReadOnly="True"/>-->
                                                     <DataGridTextColumn Binding="{Binding MaximumLength}" ClipboardContentBinding="{x:Null}" Header="Len" Width="35" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
                                                     <!--<DataGridTextColumn Binding="{Binding Precision}" ClipboardContentBinding="{x:Null}" Header="Precision" Width="60" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>-->
-                                                    <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="Null?" Width="15*" IsReadOnly="True"/>
-                                                    <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="ID" Width="10*" IsReadOnly="True"/>
+                                                    <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="NL?" Width="30" IsReadOnly="True"/>
+                                                    <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="ID" Width="22" IsReadOnly="True"/>
                                                     <DataGridTextColumn Binding="{Binding ColumnDefault}" ClipboardContentBinding="{x:Null}" Header="Values" Width="20*" IsReadOnly="True"/>
                                                     <!--<DataGridTextColumn Binding="{Binding IndexNames}" ClipboardContentBinding="{x:Null}" Header="Indexes" Width="100*" IsReadOnly="True" />-->
                                                 </DataGrid.Columns>
@@ -131,7 +131,7 @@
                             </xcad:LayoutDocumentPaneGroup>
 
                             <!-- ALL OBJECTS -->
-                            <xcad:LayoutDocumentPaneGroup DockWidth="55*" DockMinWidth="400">
+                            <xcad:LayoutDocumentPaneGroup DockWidth="1*" DockMinWidth="450">
                                 <xcad:LayoutDocumentPane>
 
                                     <xcad:LayoutDocument x:Name="docAllObjects" CanClose="False" Title=" All Objects  " IconSource="../Images/VS/ToggleWorld_16x.png" >
@@ -155,15 +155,15 @@
                                                     </Style>
                                                 </DataGrid.ColumnHeaderStyle>
                                                 <DataGrid.Columns>
-                                                    <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="80*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
-                                                    <DataGridTextColumn Binding="{Binding ColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="80*" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
+                                                    <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="Auto" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
+                                                    <DataGridTextColumn Binding="{Binding ColumnName}" ClipboardContentBinding="{x:Null}" Header="Column" Width="Auto" IsReadOnly="True" Foreground="Black" FontWeight="SemiBold"/>
                                                     <DataGridTextColumn Binding="{Binding DataType}" ClipboardContentBinding="{x:Null}" Header="Type" Width="30*" IsReadOnly="True"/>
                                                     <!--<DataGridTextColumn Binding="{Binding OrdinalPosition}" ClipboardContentBinding="{x:Null}" Header="Position" Width="13*" IsReadOnly="True"/>
                                             <DataGridTextColumn Binding="{Binding CharacterMaximumLength}" ClipboardContentBinding="{x:Null}" Header="Max Length" Width="30*" IsReadOnly="True"/>-->
                                                     <DataGridTextColumn Binding="{Binding MaximumLength}" ClipboardContentBinding="{x:Null}" Header="Len" Width="35" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>
                                                     <!--<DataGridTextColumn Binding="{Binding Precision}" ClipboardContentBinding="{x:Null}" Header="Precision" Width="60" IsReadOnly="True" Foreground="#FF00067A" FontWeight="SemiBold"/>-->
-                                                    <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="Null?" Width="15*" IsReadOnly="True"/>
-                                                    <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="ID" Width="10*" IsReadOnly="True"/>
+                                                    <DataGridCheckBoxColumn Binding="{Binding IsNullable}" ClipboardContentBinding="{x:Null}" Header="NL?" Width="30" IsReadOnly="True"/>
+                                                    <DataGridCheckBoxColumn Binding="{Binding IsIdentity}" ClipboardContentBinding="{x:Null}" Header="ID" Width="22" IsReadOnly="True"/>
                                                     <DataGridTextColumn Binding="{Binding ColumnDefault}" ClipboardContentBinding="{x:Null}" Header="Values" Width="20*" IsReadOnly="True"/>
                                                 </DataGrid.Columns>
                                                 <DataGrid.DataContext>

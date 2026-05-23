@@ -17,7 +17,7 @@ namespace DBViewer.WPF
         #region Properties
 
         // Collection of UI Tabs / UserControls
-        private List<ILoadableUserControl> _UserControls;
+        private List<ILoadableUserControl> _UserControls = new();
 
         #endregion
 

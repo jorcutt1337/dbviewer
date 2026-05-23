@@ -18,6 +18,8 @@
             PROD
         }
 
+        public const string DefaultSqlAlias = "X";
+
         // Singleton for global environment variable - May delete later
         public static EnvironmentType Environment = EnvironmentType.PROD;
 

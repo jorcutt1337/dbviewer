@@ -18,7 +18,6 @@ namespace DBViewer.WPF
 		TB.TABLE_NAME AS TableShortName,
 		(CASE LOWER(TB.TABLE_SCHEMA) WHEN 'dbo' THEN '' ELSE TB.TABLE_SCHEMA + '.' END) + TB.TABLE_NAME AS TableName,
 		COL.COLUMN_NAME AS ColumnName,
-		--(CASE SI.name WHEN NULL THEN '' ELSE 'Index' END) AS ColumnDescription,
 		C.column_id AS OrdinalPosition,
 		(CASE COL.IS_NULLABLE WHEN 'YES' THEN 1 ELSE 0 END) AS IsNullable,
 		--COALESCE(I.is_primary_key, 0) AS IsIdentity,
@@ -64,7 +63,6 @@ namespace DBViewer.WPF
 		COALESCE(PI.is_primary_key, 0) AS IsIdentity,
 		PC.Name AS PrimaryTableColumnName,
 		TB2.TABLE_SCHEMA + '.' + FT.name as ForeignTableName, 
-		--FK.constraint_column_id AS FK_PartNo, 
 		FC.name as ForeignTableColumnName 
 	FROM sys.foreign_key_columns AS FK
 		INNER JOIN sys.tables AS FT ON FT.object_id = FK.parent_object_id
@@ -86,27 +84,27 @@ namespace DBViewer.WPF
 
 		#region Keywords
 
-		public static readonly List<string> SqlReservedKeywordsAction = new List<string>()
+		private static readonly List<string> SqlReservedKeywordsAction = new List<string>()
 		{
             "ADD", "ALTER", "CREATE", "DELETE", "DROP", "INSERT", "SELECT", "UPDATE"
         };
 
-        public static readonly List<string> SqlReservedKeywordsStructural = new List<string>()
+        private static readonly List<string> SqlReservedKeywordsStructural = new List<string>()
         {
             "COLUMN", "DATABASE", "INDEX", "SCHEMA", "TABLE", "VIEW"
         };
 
-        public static readonly List<string> SqlReservedKeywordsLogical = new List<string>()
+        private static readonly List<string> SqlReservedKeywordsLogical = new List<string>()
         {
             "ALL", "AND", "AS", "BY", "CASE", "FROM", "GROUP", "HAVING", "IN", "JOIN", "OR", "ORDER", "WHERE"
         };
 
-        public static readonly List<string> SqlReservedKeywordsConstraints = new List<string>()
+        private static readonly List<string> SqlReservedKeywordsConstraints = new List<string>()
         {
             "CHECK", "CONSTRAINT", "DEFAULT", "FOREIGN", "PRIMARY", "REFERENCES", "UNIQUE"
         };
 
-        public static readonly List<string> SqlReservedKeywordsMetadata = new List<string>()
+        private static readonly List<string> SqlReservedKeywordsMetadata = new List<string>()
         {
             "CURRENT_USER", "IDENTITY", "USER", "SESSION_USER"
         };

@@ -60,6 +60,7 @@
     </Span>
 
     <Keywords color="Keyword" >
+	  <Word>1000</Word>
       <Word>ABORT</Word>
       <Word>BETWEEN</Word>
       <Word>CRASH</Word>
@@ -79,8 +80,6 @@
       <Word>ALL</Word>
       <Word>BY</Word>
       <Word>CURSOR</Word>
-      <Word>DROP</Word>
-      <Word>ALTER</Word>
       <Word>CASE</Word>
       <Word>DATABASE</Word>
       <Word>ELSE</Word>
@@ -126,7 +125,6 @@
       <Word>FLOAT</Word>
       <Word>AVG</Word>
       <Word>CONNECT</Word>
-      <Word>DELETE</Word>
       <Word>FOR</Word>
       <Word>BASE_TABLE</Word>
       <Word>CONSTANT</Word>
@@ -193,7 +191,6 @@
       <Word>INSERT</Word>
       <Word>ORDER</Word>
       <Word>RUN</Word>
-      <Word>UPDATE</Word>
       <Word>INTEGER</Word>
       <Word>OTHERS</Word>
       <Word>SAVEPOINT</Word>
@@ -253,7 +250,6 @@
       <Word>NATURAL</Word>
       <Word>RECORD</Word>
       <Word>SUBTYPE</Word>
-      <Word>TRUNCATE</Word>
     </Keywords>
 
     <Keywords color="Keyword1">
@@ -262,6 +258,12 @@
 
     <Keywords color="GoKeyword" >
       <Word>GO</Word>
+	  <Word>ALTER</Word>
+	  <Word>DELETE</Word>
+	  <Word>DROP</Word>
+	  <Word>INSERT</Word>
+	  <Word>TRUNCATE</Word>
+	  <Word>UPDATE</Word>
     </Keywords>
 
     <Rule color="ObjectReference1">([\d\w]+)\.([\d\w]+)\.([\d\w]+)</Rule>
