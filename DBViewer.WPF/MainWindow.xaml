@@ -33,6 +33,11 @@
                     </MenuItem>
                 </MenuItem>
                 <MenuItem Header="_Tools">
+                    <MenuItem Header=" _Refresh Schema" Click="MenuTools_RefreshSchema_Click">
+                        <MenuItem.Icon>
+                            <Image Source="/Images/VS/Watch_16x.png" Width="18" Height="16"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
                 </MenuItem>
                 <MenuItem Header="_Help">
                     <MenuItem Header=" _View Help">
@@ -50,19 +55,7 @@
                 <ComboBox x:Name="cboEnvironment" SelectionChanged="CboEnvironment_SelectionChanged" Text="Environment" Height="21" Width="65" Margin="0,-2, 0, -2" IsEnabled="True" />
             </Menu>
 
-            <TabControl x:Name="tabControl" Margin="0,0,0,0" Grid.Row="1">
-                <TabItem IsEnabled="True" >
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal" >
-                            <Image Width="17" Height="17" Source="/Images/VS/CPPSQLProject_16x.png" VerticalAlignment="Bottom"/>
-                            <TextBlock x:Name="txtDatabaseName" Text=" Database Viewer" Foreground="Navy" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </TabItem.Header>
-                    <Grid>
-                        <Controls:DatabaseViewerControl x:Name="ucDatabaseViewer"></Controls:DatabaseViewerControl>
-                    </Grid>
-                </TabItem>
-
+            <TabControl x:Name="tabControl" Margin="0,0,0,0" Grid.Row="1" SelectionChanged="tabControl_SelectionChanged">
             </TabControl>
 
             <StatusBar Width="Auto" Height="25" VerticalAlignment="Bottom" Grid.Row="2">

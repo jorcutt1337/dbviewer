@@ -1,0 +1,36 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DBViewer.WPF.Dialogs"        
+        xmlns:Controls="clr-namespace:DBViewer.WPF.Controls"        
+	    xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" x:Class="DBViewer.WPF.Dialogs.OmitColumnsDialog"  
+        
+        mc:Ignorable="d"
+        Title="Omit Columns" Height="400" Width="524" WindowStartupLocation="CenterScreen" Icon="/Images/favicon.ico">
+	<Grid Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFF4F7FC">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
+
+        <Button x:Name="btnOk" Content="OK" Margin="0,0,89.6,10" Height="22" Style="{StaticResource BtnBgStyleGreen}" VerticalAlignment="Bottom" Click="btnOk_Click" HorizontalAlignment="Right" Width="75">
+        </Button>
+
+        <Button x:Name="btnCancel" Content="Cancel" Style="{StaticResource BtnBgStyleRed}" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Height="22" IsCancel="True" Click="btnCancel_Click" TabIndex="7">
+        </Button>
+
+        <Label x:Name="lblMessage" Content="Columns To Omit From Query Generation:" Visibility="Visible" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Background="Transparent" Foreground="Green" Width="Auto" FontSize="14" FontWeight="SemiBold" />
+        
+		<avalonEdit:TextEditor x:Name="txtColumnsNames"
+				                                FontFamily="Consolas"
+				                                FontSize="11pt" 
+												SyntaxHighlighting="C#"
+                                                ShowLineNumbers="True"  Margin="10,45,10,50" Text=""/>
+	</Grid>
+</Window>

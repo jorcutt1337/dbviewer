@@ -28,7 +28,6 @@ namespace DBViewer.WPF
 			WHERE
 				IX.object_id = C.object_id AND ICX.column_id = C.column_id
 				), 0) AS IsIdentity,
-		0 AS DataTypeId,
 		IIF(T.Name = 'int' AND LEN(COL.COLUMN_DEFAULT) > 0, 'bit', T.Name) AS DataType,
 		(CASE WHEN COL.CHARACTER_MAXIMUM_LENGTH IS NULL THEN C.max_length ELSE COL.CHARACTER_MAXIMUM_LENGTH END) AS MaximumLength, 
 		C.precision AS Precision,
@@ -57,37 +56,74 @@ namespace DBViewer.WPF
 		(CASE LOWER(TB.TABLE_SCHEMA) WHEN 'dbo' THEN '' ELSE TB.TABLE_SCHEMA + '.' END) + TB.TABLE_NAME,
 		C.column_id";
 
+        //       internal const string TableRelationsQuery = @"
+        //SELECT
+        //	TB.TABLE_SCHEMA + '.' + PT.Name AS PrimaryTableName,
+        //	COALESCE(PI.is_primary_key, 0) AS IsIdentity,
+        //	PC.Name AS PrimaryTableColumnName,
+        //	TB2.TABLE_SCHEMA + '.' + FT.name as ForeignTableName, 
+        //	FC.name as ForeignTableColumnName 
+        //FROM sys.foreign_key_columns AS FK
+        //	INNER JOIN sys.tables AS FT ON FT.object_id = FK.parent_object_id
+        //	INNER JOIN sys.columns AS FC on FK.parent_object_id = FC.object_id AND FK.parent_column_id = FC.column_id
+        //	INNER JOIN sys.tables AS PT ON PT.object_id = FK.referenced_object_id
+        //	LEFT OUTER JOIN sys.columns PC ON PC.object_id = PT.object_id AND PC.column_id = FK.constraint_column_id
+        //	LEFT OUTER JOIN sys.index_columns PIC ON PIC.object_id = PC.object_id AND PIC.column_id = PC.column_id
+        //	LEFT OUTER JOIN sys.indexes PI ON PI.object_id = PIC.object_id AND PI.index_id = PIC.index_id
+        //	LEFT OUTER JOIN  INFORMATION_SCHEMA.TABLES TB ON TB.TABLE_NAME = PT.name
+        //	LEFT OUTER JOIN  INFORMATION_SCHEMA.TABLES TB2 ON TB2.TABLE_NAME = FT.name
+        //WHERE
+        //	PI.is_primary_key = 1
+        //ORDER BY
+        //	PrimaryTableName, 
+        //	ForeignTableName, 
+        //	FK.constraint_column_id";
+
         internal const string TableRelationsQuery = @"
-	SELECT
-		TB.TABLE_SCHEMA + '.' + PT.Name AS PrimaryTableName,
-		COALESCE(PI.is_primary_key, 0) AS IsIdentity,
-		PC.Name AS PrimaryTableColumnName,
-		TB2.TABLE_SCHEMA + '.' + FT.name as ForeignTableName, 
-		FC.name as ForeignTableColumnName 
-	FROM sys.foreign_key_columns AS FK
-		INNER JOIN sys.tables AS FT ON FT.object_id = FK.parent_object_id
-		INNER JOIN sys.columns AS FC on FK.parent_object_id = FC.object_id AND FK.parent_column_id = FC.column_id
-		INNER JOIN sys.tables AS PT ON PT.object_id = FK.referenced_object_id
-		LEFT OUTER JOIN sys.columns PC ON PC.object_id = PT.object_id AND PC.column_id = FK.constraint_column_id
-		LEFT OUTER JOIN sys.index_columns PIC ON PIC.object_id = PC.object_id AND PIC.column_id = PC.column_id
-		LEFT OUTER JOIN sys.indexes PI ON PI.object_id = PIC.object_id AND PI.index_id = PIC.index_id
-		LEFT OUTER JOIN  INFORMATION_SCHEMA.TABLES TB ON TB.TABLE_NAME = PT.name
-		LEFT OUTER JOIN  INFORMATION_SCHEMA.TABLES TB2 ON TB2.TABLE_NAME = FT.name
-	WHERE
-		PI.is_primary_key = 1
-	ORDER BY
-		PrimaryTableName, 
-		ForeignTableName, 
-		FK.constraint_column_id";
+SELECT DISTINCT
+    SCHP.name AS PrimaryTableSchemaName,
+    TBLP.name AS PrimaryTableShortName,
+    SCHF.name AS ForeignTableSchemaName,
+    TBLF.name AS ForeignTableShortName,
+    LTRIM(SCHP.name + '.' + TBLP.name, '.') AS PrimaryTableName,
+    COLP.name AS PrimaryTableColumnName,
+    LTRIM(SCHF.name + '.' + TBLF.name, '.') AS ForeignTableName,
+    COLF.name AS ForeignTableColumnName,
+    FK.name AS FK_Name,
+    CASE 
+        WHEN (SELECT COUNT(*) FROM sys.index_columns ic 
+              JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+              WHERE i.is_primary_key = 1 AND ic.object_id = TBLP.object_id) > 1 
+        THEN 1 --FK.name
+        ELSE 0
+    END AS IsCompositeKey
+    
+FROM sys.foreign_key_columns FKC
+    INNER JOIN sys.foreign_keys FK ON FK.object_id = FKC.constraint_object_id
+    
+    INNER JOIN sys.columns COLF ON COLF.object_id = FKC.parent_object_id AND COLF.column_id = FKC.parent_column_id
+    INNER JOIN sys.columns COLP ON COLP.object_id = FKC.referenced_object_id AND COLP.column_id = FKC.referenced_column_id
+    
+    INNER JOIN sys.tables TBLF ON TBLF.object_id = FKC.parent_object_id
+    INNER JOIN sys.tables TBLP ON TBLP.object_id = FKC.referenced_object_id
+    
+    INNER JOIN sys.schemas SCHF ON FK.schema_id = SCHF.schema_id
+    INNER JOIN sys.schemas SCHP ON TBLP.schema_id = SCHP.schema_id
+        
+	--INNER JOIN INFORMATION_SCHEMA.TABLES STBLF ON STBLF.TABLE_NAME = TBLF.name
+	--INNER JOIN INFORMATION_SCHEMA.COLUMNS SCOLF ON SCOLF.table_name = STBLF.TABLE_NAME AND SCOLF.column_name = COLF.Name
+
+	--INNER JOIN INFORMATION_SCHEMA.TABLES STBLP ON STBLP.TABLE_NAME = TBLP.name
+	--INNER JOIN INFORMATION_SCHEMA.COLUMNS SCOLP ON SCOLP.table_name = STBLP.TABLE_NAME AND SCOLP.column_name = COLP.Name
+ORDER BY 
+    PrimaryTableName,
+    ForeignTableName,
+    PrimaryTableColumnName,
+    ForeignTableColumnName";
 
         #endregion
 
         #region Keywords
-
-        public static readonly List<string> SqlNonPrimitiveDataTypes = new List<string>()
-        {
-            "FLAG", "HIERARCHYID", "GEOGRAPHY", "GEOMETRY"
-        };
 
         private static readonly List<string> SqlReservedKeywordsAction = new List<string>()
 		{

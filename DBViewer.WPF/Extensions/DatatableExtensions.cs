@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows.Documents;
+using System.Windows.Input;
 
 namespace DBViewer.WPF.Extensions
 {

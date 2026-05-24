@@ -4,8 +4,9 @@ namespace DBViewer.WPF.Controls
 {
 	public interface ILoadableUserControl
 	{
-		void Initialize();
-		void EnvironmentChanged();
+		void Initialize(string key, string connectionString);
+		void ResetDisplay();
+		void RefreshSchema();
         void DataGridSelectionModeChanged(DataGridSelectionUnit unit);
     }
 }

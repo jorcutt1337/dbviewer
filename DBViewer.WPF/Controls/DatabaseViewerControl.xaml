@@ -28,15 +28,60 @@
             <xcad:LayoutRoot x:Name="_layoutRoot">
 
                 <!-- MAIN ROOT -->
-                <xcad:LayoutPanel Orientation="Horizontal">
+                <xcad:LayoutPanel Orientation="Horizontal" DockWidth="1300" DockMinWidth="800">
 
                     <!-- LEFT SIDE -->
-                    <xcad:LayoutPanel Orientation="Vertical" DockWidth="1300" DockMinWidth="800">
+                    <xcad:LayoutPanel x:Name="lpLeftSide" Orientation="Vertical" DockWidth="1300" DockMinWidth="800">
 
                         <!-- TOP ROW -->
                         <xcad:LayoutPanel Orientation="Horizontal">
 
-                            <!-- TABLES -->
+                            <xcad:LayoutAnchorablePane x:Name="pnTables" DockWidth="320" DockMinWidth="320">
+
+                                <xcad:LayoutAnchorable CanHide="False" AutoHideWidth="250" x:Name="docTables" CanClose="False" Title=" Tables  " IconSource="../Images/VS/Table_16x.png" >
+                                    <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <Controls:SearchControl x:Name="tableSearchCtl" VerticalAlignment="Top" TextChanged="tableSearchCtl_TextChanged" HorizontalAlignment="Left" Width="175" Margin="0, 5, 0, 0"/>
+
+                                        <Button x:Name="btnQueryTable" Content="Top 1000" Style="{StaticResource BtnBgStyleGreen}" Margin="0,7,5,0" HorizontalAlignment="Right" Width="60" Click="btnQueryTable_Click" Height="22" VerticalAlignment="Top">
+                                        </Button>
+
+                                        <DataGrid x:Name="gridTables" SelectionUnit="FullRow" HorizontalAlignment="Stretch" Margin="0,35,0.2,0.2" Width="Auto" CanUserAddRows="False" CanUserDeleteRows="false" AutoGenerateColumns="False" AlternationCount="2" AlternatingRowBackground="#FFF5FFF2" SelectionMode="Single" RowHeight="22" Background="#FFF0F0F0" FontSize="12" SelectionChanged="gridTables_SelectionChanged">
+                                            <DataGrid.Resources>
+                                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"  Color="LightSkyBlue"/>
+                                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="LightBlue"/>
+                                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="white"/>
+                                            </DataGrid.Resources>
+                                            <DataGrid.ColumnHeaderStyle>
+                                                <Style TargetType="{x:Type DataGridColumnHeader}">
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                </Style>
+                                            </DataGrid.ColumnHeaderStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="Auto" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold"/>
+                                                <!--<DataGridTextColumn Binding="{Binding KeyColumns}" ClipboardContentBinding="{x:Null}" Header="Keys" Width="70*" IsReadOnly="True" Foreground="#FF114900"/>-->
+                                                <!--<DataGridTextColumn Binding="{Binding Rows}" ClipboardContentBinding="{x:Null}" Header="#" Width="12*" IsReadOnly="True" Foreground="#FF114900"/>-->
+                                            </DataGrid.Columns>
+                                            <DataGrid.DataContext>
+                                                <Models:SchemaViewModel/>
+                                            </DataGrid.DataContext>
+                                        </DataGrid>
+
+                                    </Grid>
+
+                                    <!-- content -->
+
+                                </xcad:LayoutAnchorable>
+
+                            </xcad:LayoutAnchorablePane>
+                            
+                            <!-- TABLES --><!--
                             <xcad:LayoutDocumentPaneGroup DockWidth=".3*" DockMinWidth="225">
                                 <xcad:LayoutDocumentPane>
                                     <xcad:LayoutDocument x:Name="docTables" CanClose="False" Title=" Tables  " IconSource="../Images/VS/Table_16x.png" >
@@ -66,8 +111,8 @@
                                                 </DataGrid.ColumnHeaderStyle>
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Binding="{Binding TableName}" ClipboardContentBinding="{x:Null}" Header="Table" Width="Auto" IsReadOnly="True" Foreground="#FF114900" FontWeight="SemiBold"/>
-                                                    <!--<DataGridTextColumn Binding="{Binding KeyColumns}" ClipboardContentBinding="{x:Null}" Header="Keys" Width="70*" IsReadOnly="True" Foreground="#FF114900"/>-->
-                                                    <!--<DataGridTextColumn Binding="{Binding Rows}" ClipboardContentBinding="{x:Null}" Header="#" Width="12*" IsReadOnly="True" Foreground="#FF114900"/>-->
+                                                    --><!--<DataGridTextColumn Binding="{Binding KeyColumns}" ClipboardContentBinding="{x:Null}" Header="Keys" Width="70*" IsReadOnly="True" Foreground="#FF114900"/>-->
+                                                    <!--<DataGridTextColumn Binding="{Binding Rows}" ClipboardContentBinding="{x:Null}" Header="#" Width="12*" IsReadOnly="True" Foreground="#FF114900"/>--><!--
                                                 </DataGrid.Columns>
                                                 <DataGrid.DataContext>
                                                     <Models:SchemaViewModel/>
@@ -78,11 +123,11 @@
                                     </xcad:LayoutDocument>
 
                                 </xcad:LayoutDocumentPane>
-                            </xcad:LayoutDocumentPaneGroup>
+                            </xcad:LayoutDocumentPaneGroup>-->
 
                             <!-- COLUMNS -->
-                            <xcad:LayoutDocumentPaneGroup DockWidth="1*" DockMinWidth="350">
-                                <xcad:LayoutDocumentPane>
+                            <xcad:LayoutDocumentPaneGroup DockWidth=".4*" DockMinWidth="400">
+                                <xcad:LayoutDocumentPane x:Name="pnColumns">
                                     <xcad:LayoutDocument x:Name="docColumns" CanClose="False" Title="Columns" IconSource="../Images/VS/Column_16x.png">
                                         <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                             <Grid.ColumnDefinitions>
@@ -127,8 +172,8 @@
                             </xcad:LayoutDocumentPaneGroup>
 
                             <!-- ALL OBJECTS -->
-                            <xcad:LayoutDocumentPaneGroup DockWidth="1*" DockMinWidth="450">
-                                <xcad:LayoutDocumentPane>
+                            <xcad:LayoutDocumentPaneGroup DockWidth=".6*" DockMinWidth="450">
+                                <xcad:LayoutDocumentPane x:Name="pnAllObjects">
 
                                     <xcad:LayoutDocument x:Name="docAllObjects" CanClose="False" Title=" All Objects  " IconSource="../Images/VS/ToggleWorld_16x.png" >
                                         <Grid Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0.2,0.2">
@@ -182,7 +227,7 @@
                         <!-- BOTTOM RESULTS -->
                         <xcad:LayoutDocumentPaneGroup DockHeight="*">
 
-                            <xcad:LayoutDocumentPane x:Name="docPaneQueryResults">
+                            <xcad:LayoutDocumentPane x:Name="pnQueryResults">
                                 <xcad:LayoutDocument CanClose="False" x:Name="docQueryResults" ContentId="document1" Title="Query Results" IconSource="../Images/VS/Search_16x.png">
                                     <Grid Width="Auto" Height="Auto"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                         <Grid.ColumnDefinitions>
@@ -213,7 +258,7 @@
 
 
                     <!-- RIGHT SIDE -->
-                    <xcad:LayoutPanel x:Name="lpRight" Orientation="Vertical" DockWidth="500" DockMinWidth="500">
+                    <xcad:LayoutPanel x:Name="lpRight" Orientation="Vertical" DockWidth=".3*" DockMinWidth="500">
 
                         <!-- TOP RIGHT -->
                         <xcad:LayoutDocumentPaneGroup DockHeight="3*">
@@ -230,23 +275,26 @@
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
 
-                                        <avalonEdit:TextEditor x:Name="txtQuery" Background="GhostWhite" FontFamily="Consolas" FontSize="10pt" SyntaxHighlighting="SQL" ShowLineNumbers="True" Margin="0,0,0,32.8" />
-                                        <Button x:Name="btnExecuteQuery" Style="{StaticResource BtnBgStyleGreen}" Content="Execute Query" Margin="10,0,0,6.2" Click="BtnExecuteQuery_Click" Height="22" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="100">
+                                        <avalonEdit:TextEditor x:Name="txtQuery" Background="GhostWhite" FontFamily="Consolas" FontSize="10pt" SyntaxHighlighting="SQL" ShowLineNumbers="True" Margin="0,0,0,60" />
+                                        <Button x:Name="btnExecuteQuery" Style="{StaticResource BtnBgStyleGreen}" Content="Execute Query" Margin="5,0,0,7" Click="BtnExecuteQuery_Click" Height="42" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="100">
                                         </Button>
 
-                                        <CheckBox x:Name="chkAutoGenerateQueryJoins" Content="Joins" Margin="125,0,0,7" Unchecked="chkAutoGenerateQueryJoins_Unchecked" Checked="chkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+                                        <CheckBox x:Name="chkAutoGenerateQueryJoins" Content="Auto-Generate Query Joins" Margin="115,0,0,27" Unchecked="chkAutoGenerateQueryJoins_Unchecked" Checked="chkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172" FontWeight="SemiBold"/>
 
-                                        <CheckBox x:Name="chkInclJoinSelects" Content="+ Selects" Margin="182,0,0,7" Unchecked="chkAutoGenerateQueryJoins_Unchecked" Checked="chkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+                                        <CheckBox x:Name="chkInclJoinSelects" Content="+ Join Selects" Margin="295,0,0,27" Unchecked="chkAutoGenerateQueryJoins_Unchecked" Checked="chkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172" FontWeight="SemiBold"/>
 
-                                        <CheckBox x:Name="chkAutoGenerateSelects1Line" Content="Sel 1 Ln/Table" Margin="260,0,0,7" Unchecked="chkAutoGenerateQueryJoins_Unchecked" Checked="chkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172"/>
+                                        <CheckBox x:Name="chkAutoGenerateSelects1Line" Content="Selects on 1 Line per Table" Margin="115,0,0,7" Unchecked="chkAutoGenerateQueryJoins_Unchecked" Checked="chkAutoGenerateQueryJoins_Checked" Height="16" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="172" FontWeight="SemiBold"/>
 
-                                        <Label x:Name="label" Content="Lvl Up:" HorizontalAlignment="Right" FontWeight="Bold" Visibility="Visible" VerticalAlignment="Bottom" Margin="0, 0, 60, 3"/>
+                                        <Label x:Name="label" Content="Levels Up:" HorizontalAlignment="Right" FontWeight="Bold" Visibility="Visible" VerticalAlignment="Bottom" Margin="0, 0, 60, 28"/>
 
-                                        <xctk:IntegerUpDown  x:Name="nudDefaultRelationsipsDown" Height="23" Margin="0,0,135,3" Value="2"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="55" Maximum="15" Minimum="0" IsEnabled="True" Visibility="Visible" ValueChanged="chkAutoGenerateQueryJoins_Checked" />
+                                        <xctk:IntegerUpDown  x:Name="nudDefaultRelationsipsUp" Height="23" Margin="0,0,0,30" Value="1"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="55" Maximum="1" Minimum="0" IsEnabled="True" Visibility="Visible" ValueChanged="chkAutoGenerateQueryJoins_Checked" />
 
-                                        <Label x:Name="label2" Content="Lvl Down:" HorizontalAlignment="Right" FontWeight="Bold" Visibility="Visible" VerticalAlignment="Bottom" Margin="0, 0, 195, 3"/>
+                                        <Label x:Name="label2" Content="Levels Down:" HorizontalAlignment="Right" FontWeight="Bold" Visibility="Visible" VerticalAlignment="Bottom" Margin="0, 0, 60, 3"/>
 
-                                        <xctk:IntegerUpDown  x:Name="nudDefaultRelationsipsUp" Height="23" Margin="0,0,0,3" Value="1"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="55" Maximum="10" Minimum="0" IsEnabled="False" Visibility="Visible" ValueChanged="chkAutoGenerateQueryJoins_Checked" />
+                                        <xctk:IntegerUpDown  x:Name="nudDefaultRelationsipsDown" Height="23" Margin="0,0,0,3" Value="2"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="55" Maximum="15" Minimum="0" IsEnabled="True" Visibility="Visible" ValueChanged="chkAutoGenerateQueryJoins_Checked" />
+
+                                        <Button x:Name="btnOpenOmitColumnsDialog" Content="Omit Columns" Style="{StaticResource BtnBgStyleGreen}" Margin="0,0,155,5" HorizontalAlignment="Right" Width="90" Click="btnOpenOmitColumnsDialog_Click" Height="22" VerticalAlignment="Bottom">
+                                        </Button>
 
                                     </Grid>
 

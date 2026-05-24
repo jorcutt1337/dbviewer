@@ -6,6 +6,9 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
+using DBViewer.WPF.Dialogs;
+using DBViewer.WPF.Extensions;
 using DBViewer.WPF.Models;
 using Xceed.Wpf.AvalonDock.Controls;
 using Xceed.Wpf.AvalonDock.Layout;
@@ -19,13 +22,17 @@ namespace DBViewer.WPF.Controls
     {
         #region Properties
 
+        private string _AppSettingsKeyName = string.Empty;
+        private string _ConnectionString = string.Empty;
+        private string _DatabaseName = string.Empty;
+
         // Database Schema Information
         private List<SchemaViewModel> _Columns = new List<SchemaViewModel>();
         private List<RelationViewModel> _Keys = new List<RelationViewModel>();
 
         private List<SchemaModel> _Models = new List<SchemaModel>();
 
-
+        private List<string> _ColumnsToOmit = Globals.DefaultColumnsToIgnore;
 
         // Datagrid Selection Unit (Row vs Cell vs Both)
         private DataGridSelectionUnit _SelectionUnit = DataGridSelectionUnit.FullRow;
@@ -35,9 +42,9 @@ namespace DBViewer.WPF.Controls
         {
             get
             {
-                if (this.docPaneQueryResults.SelectedContentIndex == -1) { return null; }
+                if (this.pnQueryResults.SelectedContentIndex == -1) { return null; }
 
-                return (LayoutDocument)docPaneQueryResults.SelectedContent;
+                return (LayoutDocument)pnQueryResults.SelectedContent;
             }
         }
 
@@ -66,12 +73,12 @@ namespace DBViewer.WPF.Controls
                 {
                     var directoryPath = System.IO.Directory.GetCurrentDirectory();
                     var dir = new DirectoryInfo(directoryPath);
-                    var xmlFile = dir.GetFiles().FirstOrDefault(v => v.Name == Globals.XmlSchemaFilename);
+                    var xmlFile = dir.GetFiles().FirstOrDefault(v => v.Name == _AppSettingsKeyName);
 
-                    if (xmlFile == null)
+                    if (xmlFile == null || Globals.RefreshSchemaOnEveryStart)
                     {
-                        columns = DataUtility.GetInstances<SchemaViewModel>(SqlConstants.SchemaQuery);
-                        keys = DataUtility.GetInstances<RelationViewModel>(SqlConstants.TableRelationsQuery);
+                        columns = DataUtility.GetInstances<SchemaViewModel>(SqlConstants.SchemaQuery, _ConnectionString);
+                        keys = DataUtility.GetInstances<RelationViewModel>(SqlConstants.TableRelationsQuery, _ConnectionString);
 
                         var data = new SchemaXmlModel()
                         {
@@ -80,7 +87,7 @@ namespace DBViewer.WPF.Controls
                         };
 
                         var xml = XmlExtenstions.Serialize(data);
-                        var xmlFilePath = Path.Combine(dir.FullName, Globals.XmlSchemaFilename);
+                        var xmlFilePath = Path.Combine(dir.FullName, _AppSettingsKeyName);
 
                         File.WriteAllText(xmlFilePath, xml);
                     }
@@ -107,8 +114,8 @@ namespace DBViewer.WPF.Controls
                         var p = this._Columns.FirstOrDefault(v => v.TableName == key.PrimaryTableName && v.ColumnName == key.PrimaryTableColumnName);
                         var c = this._Columns.FirstOrDefault(v => v.TableName == key.ForeignTableName && v.ColumnName == key.ForeignTableColumnName);
 
-                        key.PrimaryColumn = p ?? throw new Exception($"Primary column '{key.PrimaryTableName}.{key.PrimaryTableColumnName}' not found in columns list.");
-                        key.ForeignColumn = c ?? throw new Exception($"Foreign column '{key.ForeignTableName}.{key.ForeignTableColumnName}' not found in columns list.");
+                        key.PrimaryColumn = p ?? null; // throw new Exception($"Primary column '{key.PrimaryTableName}.{key.PrimaryTableColumnName}' not found in columns list.");
+                        key.ForeignColumn = c ?? null; // throw new Exception($"Foreign column '{key.ForeignTableName}.{key.ForeignTableColumnName}' not found in columns list.");
                     }
 
                     this._Models = this._Columns.GroupBy(d => new { d.DatabaseName, d.TableName, d.TablePrefix, d.Rows })
@@ -140,6 +147,8 @@ namespace DBViewer.WPF.Controls
 
                     gridTables.ItemsSource = dataTables;
                     databaseGridAllObjects.ItemsSource = tableRelations;
+
+                    this.AutoSizeLayout();
                 };
 
                 worker.RunWorkerAsync();
@@ -147,7 +156,35 @@ namespace DBViewer.WPF.Controls
             catch (Exception ex)
             {
                 Debug.WriteLine(string.Format("Application '{0}' failed to initialize. Error: '{1}'", nameof(DBViewer), ex.ToString()));
+                throw;
             }
+        }
+        private void AutoSizeLayout()
+        {
+            double maxWidth = 0;
+
+            foreach (SchemaViewModel item in gridTables.ItemsSource)
+            {
+                double width = DisplayHelper.MeasureTextWidth(
+                    item.TableName,
+                    gridTables.FontFamily,
+                    gridTables.FontSize,
+                    FontStyles.Normal,
+                    FontWeights.SemiBold,
+                    FontStretches.Normal);
+
+                if (width > maxWidth)
+                {
+                    maxWidth = width;
+                }
+            }
+
+            // Add padding for cell margins/sort glyph/etc.
+            maxWidth += 30;
+
+            this.pnTables.DockWidth = new GridLength(maxWidth);
+            lpRight.DockWidth = new GridLength(750);
+            lpLeftSide.DockWidth = new GridLength(1300);
         }
 
         private void LoadTextEditorHighlighting()
@@ -176,28 +213,39 @@ namespace DBViewer.WPF.Controls
 
         // Exposed function that is called from the MainWindow to Initialize the control and load necessary data.
         // This is where we should load the database schema information and any other necessary data, as well as initialize any UI elements (e.g. syntax highlighting in the query text box)
-        public void Initialize()
+        public void Initialize(string key, string connectionString)
         {
+            _AppSettingsKeyName = key;
+            _ConnectionString = connectionString;
+            this.Name = _AppSettingsKeyName;
+            this.ToolTip = _ConnectionString;
+
             this.LoadDbInformation();
 
             this.LoadTextEditorHighlighting();
         }
 
-        public void EnvironmentChanged()
+        public void ResetDisplay()
         {
+            lpLeftSide.DockWidth = new GridLength(1300);
+        }
+
+        public void RefreshSchema()
+        {
+            // ConnectionStrings
         }
 
         public void DataGridSelectionModeChanged(DataGridSelectionUnit unit)
         {
-            if (docPaneQueryResults.Children.Count == 0) { return; }
+            if (pnQueryResults.Children.Count == 0) { return; }
 
             this._SelectionUnit = unit;
 
             try
             {
-                for (var i = 0; i < docPaneQueryResults.Children.Count; i++)
+                for (var i = 0; i < pnQueryResults.Children.Count; i++)
                 {
-                    var doc = (LayoutDocument)docPaneQueryResults.Children[i];
+                    var doc = (LayoutDocument)pnQueryResults.Children[i];
                     var grid = (Grid)doc.Content;
                     var datagrid = grid.FindLogicalChildren<DataGrid>().FirstOrDefault();
                     if (datagrid != null)
@@ -235,6 +283,19 @@ namespace DBViewer.WPF.Controls
             this.rbTables.IsChecked = true;
             this.allObjectsSearchCtl.txtSearch.Text = entry.TableName;
             this.docAllObjects.IsSelected = true;
+        }
+
+        private void btnOpenOmitColumnsDialog_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OmitColumnsDialog(this._ColumnsToOmit);
+            var result = dialog.ShowDialog();
+            if (result.HasValue && result.Value == true && dialog.ColumnsToOmit != null)
+            {
+                this._ColumnsToOmit = dialog.ColumnsToOmit.Order().ToList();
+
+                 // Trigger Query Refresh
+                 SelectedTableChanged();
+            }
         }
 
         private void btnQueryTable_Click(object sender, RoutedEventArgs e)
@@ -342,6 +403,8 @@ namespace DBViewer.WPF.Controls
         {
             if (gridTables.SelectedItem == null) { return; }
 
+            var startTime = DateTime.Now;
+
             // Constants To Avoid Hardcoding
             const string TB = "\t";
             const string RN = "\r\n";
@@ -371,7 +434,8 @@ namespace DBViewer.WPF.Controls
                 foreach (var key in tableModel.RelationsUp)
                 {
                     var relatedTableColumns = new List<SchemaViewModel>() { key.PrimaryColumn }.Concat(key.PrimaryColumn.OtherTableColumns)
-                        .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
+                        // .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper()))
+                        .Distinct().ToList();
 
                     // Add Related Parent Table Join
                     relatedTableJoins.Add(TB + "INNER JOIN " + key.PrimaryTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.PrimaryTableColumnName + " = " + "X." + key.ForeignTableColumnName);
@@ -430,56 +494,12 @@ namespace DBViewer.WPF.Controls
                 }
             }
 
-            //var primTables = segments.Select(v => v.PrimaryTableName).Distinct().ToList();
-            //var forTables = segments.Select(v => v.ForeignTableName).Distinct().ToList();
-            //var allTables = primTables.Concat(forTables).Order().Select((v, i) => new
-            //{
-            //    Table = v,
-            //    Index = i + 1
-            //}).ToList();
-
-            //if (nudDefaultRelationsipsDown.Value >= 1)
-            //{
-            //    // Loop Child Relationships With Left Joins
-            //    foreach (var key in tableModel.RelationsDown)
-            //    {
-            //        var relatedTableColumns = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns)
-            //            .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
-
-            //        // Add Related Child Table Join
-            //        relatedTableJoins.Add(TB + "LEFT JOIN " + key.ForeignTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.ForeignTableColumnName + " = " + "X." + key.PrimaryTableColumnName);
-
-            //        // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
-            //        relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
-            //        relatedTableIndex++;
-
-            //        Console.WriteLine($"Primary: {key.PrimaryTableName}.{key.PrimaryTableColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignTableColumnName}");
-            //        if (nudDefaultRelationsipsDown.Value >= 2)
-            //        {
-            //            var find = _Models.First(v => v.TableName == key.ForeignTableName);
-            //            foreach (var key2 in find.RelationsDown)
-            //            {
-            //                var relatedTableColumns2 = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns)
-            //                    .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
-
-            //                // Add Related Child Table Join
-            //                relatedTableJoins.Add(TB + "LEFT JOIN " + key2.ForeignTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key2.ForeignTableColumnName + " = " + "X." + key2.PrimaryTableColumnName);
-
-            //                // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
-            //                relatedTableColumnsSelect += RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns2.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
-            //                relatedTableIndex++;
-
-            //                Console.WriteLine($"Primary: {key2.PrimaryTableName}.{key2.PrimaryTableColumnName} -> Foreign: {key2.ForeignTableName}.{key2.ForeignTableColumnName}");
-            //            }
-            //        }
-            //    }
-            //}
-
             // Kill Any Trailing Comma Before "FROM" Clause
             relatedTableColumnsSelect = relatedTableColumnsSelect.TrimEnd(',');
 
             // Get Primary Table Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects'
-            var primaryColumns = tableModel.Columns.Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper()))
+            var primaryColumns = tableModel.Columns
+                // .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper()))
                 .OrderBy(v => v.OrdinalPosition).Select(v => (singleLine == false ? TB + TB : " ") + "X." + v.ColumnName).Distinct().ToList();
 
             // If Auto-Generate Query Joins
@@ -500,6 +520,8 @@ namespace DBViewer.WPF.Controls
             txtQuery.Text = query + RNT + RNT;
             docColumns.Title = table.TableName;
             gridColumns.ItemsSource = new ObservableCollection<SchemaViewModel>(tableModel.Columns);
+
+            Debug.WriteLine("Time To Generate Query - " + (decimal)Math.Round((DateTime.Now - startTime).TotalSeconds, 3) + " seconds");
         }
 
         record QueryGen(string PrimaryTableName, string ForeignTableName, string Selects, string Joins);
@@ -514,14 +536,51 @@ namespace DBViewer.WPF.Controls
             // Default Return Query Segments
             queries = queries ?? new List<QueryGen>();
 
+            // List Of Relations To Skip.
+            // E.g. SalesOrderDetail Table Links To SpecialOfferProduct Table On BOTH ProductID AND SpecialOfferID
+            // The 1st Ordinal Position Relation (ProductID) Will Process All Links Between These 2 Tables
+            // SpecialOfferID Relation Will Be Added To This List In Loop So We Can Properly Skip It
+            var compositeRelationsToSkip = new List<RelationViewModel>();
+
             // Loop Child Relationships With Left Joins
             foreach (var key in model.RelationsDown)
             {
+                // Validation
+                if (this._ColumnsToOmit.Any(v => v == key.PrimaryTableColumnName || v == key.ForeignTableColumnName))
+                {
+                    Debug.WriteLine($"Ignoring Relation - Primary: {key.PrimaryTableName}.{key.PrimaryTableColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignTableColumnName} Because Column Is In DefaultColumnsToIgnore List");
+                    continue;
+                }
+
+                // Check If This Relation Was Already Processed By A Previous Relation To Same Table In Its Own JOIN. If So Skip It
+                if (compositeRelationsToSkip.Contains(key)) { continue; }
+
+                // Get Any Other Composite Key Columns For This Foreign Table
+                var compositeOtherRelations = model.RelationsDown.Where(v => v.IsCompositeKey && v.ForeignTableName == key.ForeignTableName && v.ForeignTableColumnName != key.ForeignTableColumnName).ToList();
+                if (compositeOtherRelations.Count > 0)
+                {
+                    // Add Other Composites To List Of Relations To Skip, Because Were Gonna Process Them Right Now
+                    compositeRelationsToSkip.AddRange(compositeOtherRelations);
+                }
+
+                // Get Related Table Columns
                 var relatedTableColumns = new List<SchemaViewModel>() { key.ForeignColumn }.Concat(key.ForeignColumn.OtherTableColumns)
-                    .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper())).Distinct().ToList();
+                    // .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper()))
+                    .Distinct().ToList();
 
                 // Add Related Child Table Join
-                var joins = TB + "LEFT JOIN " + key.ForeignTableName + " [" + key.ForeignTableName + "] ON [" + key.ForeignTableName + "]." + key.ForeignTableColumnName + " = [" + key.PrimaryTableName + "]." + key.PrimaryTableColumnName;
+                var joins = TB + "LEFT JOIN " + key.ForeignTableName + " [" + key.ForeignTableName + "] ON [" + key.ForeignTableName + "]." + key.ForeignTableColumnName + " = [" + key.PrimaryTableName + "]." + key.PrimaryTableColumnName 
+                    + (compositeOtherRelations.Count == 0 ? string.Empty : " AND " + String.Join(" AND ", compositeOtherRelations.Select(v => "[" + v.ForeignTableName + "]." + v.ForeignTableColumnName + " = " + "[" + v.PrimaryTableName + "]." + v.PrimaryTableColumnName)));
+
+                // DEBUG - For Testing
+                if (compositeOtherRelations.Count > 0)
+                {
+                    foreach (var rel in compositeOtherRelations)
+                    {
+                        Debug.WriteLine($"Added Composite Key Entry - Primary: {rel.PrimaryTableName}.{rel.PrimaryTableColumnName} -> Foreign: {rel.ForeignTableName}.{rel.ForeignTableColumnName}");
+                        Debug.WriteLine($"JOIN: {joins}");
+                    }
+                }
 
                 // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
                 var selects = RN + SLTT + string.Join("," + (singleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (singleLine == false ? TB + TB : "") + "[" + key.ForeignTableName + "]." + x.ColumnName)) + ",";
@@ -529,37 +588,36 @@ namespace DBViewer.WPF.Controls
                 // Add Query Segments To Return List
                 queries.Add(new QueryGen(key.PrimaryTableName, key.ForeignTableName, selects, joins));
                 level++;
-
-                // Check If Keep Going Down
-                if (level < stopAfter)
+                Debug.WriteLine($"Main - Primary: {key.PrimaryTableName}.{key.PrimaryTableColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignTableColumnName} - Added");
+                
+                // Check If Stop
+                if (level >= stopAfter)
                 {
-                    // Find Next Level Down
-                    var find = _Models.First(v => v.TableName == key.ForeignTableName);
+                    // Debug.WriteLine($"Primary: {key.PrimaryTableName} -> Foreign: {key.ForeignTableName} Stopping");
+                    continue; 
+                }
 
-                    // Validation - If Table Already Been Added As Join Then Don't Recurse Down That Path Again (Prevents Circular Relationship Issues)
-                    if (queries.Any(v => v.PrimaryTableName == find.TableName)) { continue; }
+                // Find Next Level Down
+                var find = _Models.First(v => v.TableName == key.ForeignTableName);
 
-                    // Recurse
-                    var nextLevelDownQueries = GetQueryRelationsDown(find, level, stopAfter, singleLine, queries);
+                // Validation - If Table Already Been Added As Join Then Don't Recurse Down That Path Again (Prevents Circular Relationship Issues)
+                if (queries.Any(v => v.PrimaryTableName == find.TableName)) { continue; }
 
-                    // Loop 
-                    foreach (var query in nextLevelDownQueries)
+                // Recursion - Get Next Level Down Relations
+                var nextLevelDownQueries = GetQueryRelationsDown(find, level, stopAfter, singleLine, queries);
+
+                // Loop 
+                foreach (var query in nextLevelDownQueries)
+                {
+                    // Validation?
+                    if (queries.Any(v => v.PrimaryTableName == query.PrimaryTableName && v.ForeignTableName == query.ForeignTableName))
                     {
-                        // Validation?
-                        if (queries.Any(v => v.PrimaryTableName == query.PrimaryTableName && v.ForeignTableName == query.ForeignTableName)) 
-                        {
-                            Debug.WriteLine(DateTime.Now + " - " + query.PrimaryTableName + ", " + query.ForeignTableName);
-                            continue;
-                        }
-                        queries.Add(query);
+                        //  Debug.WriteLine($"Primary: {query.PrimaryTableName} -> Foreign: {query.ForeignTableName} - Skipped. Already In Table");
+                        continue;
                     }
+                    Debug.WriteLine($"Nested - Primary: {query.PrimaryTableName} -> Foreign: {query.ForeignTableName} - Adding");
+                    queries.Add(query);
                 }
-                else
-                {
-                    continue;
-                }
-
-                Console.WriteLine($"Primary: {key.PrimaryTableName}.{key.PrimaryTableColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignTableColumnName}");
             }
 
             return queries;
@@ -574,12 +632,14 @@ namespace DBViewer.WPF.Controls
 
             try
             {
-                var table = DataUtility.GetDataTable(query);
+                var table = DataUtility.GetDataTable(query, _ConnectionString);
 
                 if (table == null) { return; }
 
-                if (docPaneQueryResults.Children.Count == 1 && this.dataGridQueryResults.DataContext == null)
+                if (pnQueryResults.Children.Count == 1 && this.dataGridQueryResults.DataContext == null)
                 {
+                    
+
                     this.dataGridQueryResults.DataContext = table.DefaultView;
                     docQueryResults.Title = table.Rows.Count + " - " + item.TableName;
                 }
@@ -596,7 +656,7 @@ namespace DBViewer.WPF.Controls
 
         private void AddNewQueryResultSet(DataTable table, string tableName, string query)
         {
-            LayoutDocumentQuery doc = new LayoutDocumentQuery(query) { Title = table.Rows.Count + " - " + tableName, ContentId = "document" + (docPaneQueryResults.Children.Count + 1), IconSource = docTables.IconSource };
+            LayoutDocumentQuery doc = new LayoutDocumentQuery(query) { Title = table.Rows.Count + " - " + tableName, ContentId = "document" + (pnQueryResults.Children.Count + 1), IconSource = docTables.IconSource };
             Grid grid = new Grid() { Width = Double.NaN, Height = Double.NaN, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
             grid.ColumnDefinitions.Add(new ColumnDefinition());
             grid.RowDefinitions.Add(new RowDefinition());
@@ -628,10 +688,10 @@ namespace DBViewer.WPF.Controls
 
             grid.Children.Add(dGrid);
             doc.Content = grid;
-            docPaneQueryResults.Children.Add(doc);
+            pnQueryResults.Children.Add(doc);
 
             dGrid.ItemsSource = table.AsDataView();
-            docPaneQueryResults.SelectedContentIndex = docPaneQueryResults.Children.Count - 1;
+            pnQueryResults.SelectedContentIndex = pnQueryResults.Children.Count - 1;
         }
 
         #endregion

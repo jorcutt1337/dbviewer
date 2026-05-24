@@ -1,4 +1,7 @@
-﻿namespace DBViewer.WPF
+﻿using System.ComponentModel;
+using System.IO;
+
+namespace DBViewer.WPF
 {
     /// <summary>
     /// Global information class
@@ -12,24 +15,31 @@
             CellOrRowHeader
         }
 
-        public enum EnvironmentType
-        {
-            DEV,
-            PROD
-        }
-
         public const string DefaultSqlAlias = "X";
 
-        // Singleton for global environment variable - May delete later
-        public static EnvironmentType Environment = EnvironmentType.PROD;
+        private static List<string> _DefaultColumnsToIgnore = null;
+        public static List<string> DefaultColumnsToIgnore
+        {
+            get
+            {
+                if (_DefaultColumnsToIgnore == null)
+                {
+                    _DefaultColumnsToIgnore = new List<string>();
+                    string columnsToIgnoreConfig = System.Configuration.ConfigurationManager.AppSettings["DefaultColumnsToIgnore"];
+                    if (!string.IsNullOrEmpty(columnsToIgnoreConfig))
+                    {
+                        _DefaultColumnsToIgnore = columnsToIgnoreConfig.Split(',').Select(c => c.Trim())
+                            .Distinct().Order().ToList();
+                    }
+                }
+                return _DefaultColumnsToIgnore;
+            }
+        }
 
-        // App.config key name for connection string
-        public static string DbConnectionKeyName => "DB_" + Environment;
 
-        // Name of file to save db schema information in on 1st load. Read from file on subsequent app launches. Delete file to refresh schema.
-        public const string XmlSchemaFilename = "DB_SCHEMA.xml";
+        public static bool RefreshSchemaOnEveryStart =>  bool.Parse(System.Configuration.ConfigurationManager.AppSettings["RefreshSchemaOnEveryStart"] ?? "false");  
 
         // Name of AvalonEdit highlighting language file
-        public const string AvalonEditHiglightLanguageFilename = "DBViewer.WPF.Resources.AvalonEdit.SQL.xshd";
+        public static string AvalonEditHiglightLanguageFilename => "DBViewer.WPF.Resources.AvalonEdit.SQL.xshd";
     }
 }

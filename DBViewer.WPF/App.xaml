@@ -32,6 +32,18 @@
             </Setter>
         </Style>
 
+        <Style x:Key="BtnBgStyleRed" TargetType="Button">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                        <GradientStop Color="#FFF3F3F3" Offset="0"/>
+                        <GradientStop Color="#FFEBEBEB"/>
+                        <GradientStop Color="#FFDDDDDD"/>
+                        <GradientStop Color="#FFFF9999" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
         
         <!--MyCustomDocumentPaneControlStyle-->
         <BooleanToVisibilityConverter x:Key="BoolToVis" />

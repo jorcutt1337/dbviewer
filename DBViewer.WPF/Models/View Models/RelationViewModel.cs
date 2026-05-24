@@ -7,12 +7,28 @@ namespace DBViewer.WPF.Models
     /// </summary>
     public class RelationViewModel
 	{
-		#region Properties
+        #region Properties
 
-		public string PrimaryTableName { get; set; } = string.Empty;
+        public string PrimaryTableSchemaName { get; set; } = string.Empty;
+        public string PrimaryTableShortName { get; set; } = string.Empty;
+        public string ForeignTableSchemaName { get; set; } = string.Empty;
+        public string ForeignTableShortName { get; set; } = string.Empty;
+
+        // ---
+
+        public string PrimaryTableName { get; set; } = string.Empty;
         public string PrimaryTableColumnName { get; set; } = string.Empty;
         public string ForeignTableName { get; set; } = string.Empty;
         public string ForeignTableColumnName { get; set; } = string.Empty;
+        
+        // ---
+        
+        public string ForeignKeyName { get; set; } = string.Empty;
+        public bool IsCompositeKey { get; set; }
+        public bool PrimaryIsNullable { get; set; }
+        public bool ForeignIsNullable { get; set; }
+
+        // ---
 
         [XmlIgnore]
 		public SchemaViewModel PrimaryColumn { get; set; } = new();
