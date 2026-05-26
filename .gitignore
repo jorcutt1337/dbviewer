@@ -6,3 +6,9 @@
 /DBViewer.WPF/bin/Debug/net10.0-windows
 /DBViewer.WPF/obj
 *.user
+/JEO3.WPF/bin/Debug/net10.0-windows
+/JEO3.WPF/obj
+/JEO3.Data/obj
+/JEO3.Data/bin/Debug/net10.0
+/JEO3.SchemaEngine/bin/Debug/net10.0
+/JEO3.SchemaEngine/obj

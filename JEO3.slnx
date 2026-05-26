@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="JEO3.Data/JEO3.Data.csproj" Id="e4646e34-8acd-4e1d-bc3c-502980f947df" />
+  <Project Path="JEO3.SchemaEngine/JEO3.SchemaEngine.csproj" Id="c4aa52cb-2716-4ec6-8249-964fa3f6ba66" />
+  <Project Path="JEO3.WPF/JEO3.WPF.csproj" />
+</Solution>
