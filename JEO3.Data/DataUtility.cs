@@ -12,6 +12,7 @@
     public static class DataUtility
     {
         #region Data
+
         public static bool TestConnection(string connectionString)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -35,6 +36,7 @@
                 }
             }
         }
+
         public static async Task<DataTable> GetDataTable(string query, string connectionString)
         {
             // Connection
@@ -49,6 +51,9 @@
                     {
                         // Create DataTable Dyanmically Instead Of Using DataAdapter To Avoid Issues With SQL UDTs
                         DataTable dt = new DataTable();
+
+                        // Get ColumnNames
+                        var columnNames = GetUniqueColumnNames(reader);
 
                         // Loop Fields
                         for (int i = 0; i < reader.FieldCount; i++)
@@ -75,7 +80,8 @@
                                     break;
                             }
 
-                            dt.Columns.Add(reader.GetName(i), columnType);
+
+                            dt.Columns.Add(columnNames[i], columnType);
                         }
 
                         // Populate Rows
@@ -131,11 +137,39 @@
             }
         }
 
+        private static List<string> GetUniqueColumnNames(SqlDataReader reader)
+        {
+            var result = new List<string>();
+            var occurrences = new Dictionary<string, int>(
+                StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                string columnName = reader.GetName(i);
+
+                if (occurrences.TryGetValue(columnName, out int count))
+                {
+                    count++;
+                    occurrences[columnName] = count;
+
+                    columnName = $"{columnName}_{count}";
+                }
+                else
+                {
+                    occurrences[columnName] = 0;
+                }
+
+                result.Add(columnName);
+            }
+
+            return result;
+        }
+
         #endregion
 
         #region Reflection
 
-        public static async Task<List<T>> GetInstances<T>(string query, string connString)
+        public static async Task<IReadOnlyList<T>> GetInstances<T>(string query, string connString)
         {
             var startTime = DateTime.Now;
 

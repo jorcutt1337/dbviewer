@@ -12,3 +12,5 @@
 /JEO3.Data/bin/Debug/net10.0
 /JEO3.SchemaEngine/bin/Debug/net10.0
 /JEO3.SchemaEngine/obj
+/JEO3.SchemaEngine/bin/Release/net10.0
+/JEO3.Data/bin/Release/net10.0

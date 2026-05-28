@@ -3,6 +3,9 @@ using System.Reflection;
 
 namespace JEO3.Data.Extensions
 {
+    /// <summary>
+    /// DataTable Extensions
+    /// </summary>
     public static class DataTableExtensions
     {
         #region Reflection

@@ -9,7 +9,7 @@ namespace JEO3.Data
         #region Keywords
 
         public static readonly List<string> ReservedKeywordsAction = new List<string>()
-		{
+        {
             "ADD", "ALTER", "CREATE", "DELETE", "DROP", "INSERT", "SELECT", "UPDATE"
         };
 
@@ -33,26 +33,26 @@ namespace JEO3.Data
             "CURRENT_USER", "IDENTITY", "USER", "SESSION_USER"
         };
 
-		public static readonly List<string> ReservedKeywordsAll = ReservedKeywordsAction
-			.Concat(ReservedKeywordsStructural)
-			.Concat(ReservedKeywordsLogical)
-			.Concat(ReservedKeywordsConstraints)
-			.Concat(ReservedKeywordsMetadata).ToList();
-
+        public static readonly List<string> ReservedKeywordsAll = ReservedKeywordsAction
+            .Concat(ReservedKeywordsStructural)
+            .Concat(ReservedKeywordsLogical)
+            .Concat(ReservedKeywordsConstraints)
+            .Concat(ReservedKeywordsMetadata).ToList();
 
         #endregion
 
         #region Type Mappings
 
         /// <summary>
-        /// List of SQL Type Codes for the app to work
+        /// List of SQL Type Codes for Model Hydration. Note: They do not affect the retrieval of a DataTable from a SQL query, only DataTable --> Hydration of a model of Type T
+        /// For example, if model <T> has a property of type int, then this list will be used to determine that the TypeCode for int is Int32, 
+        /// which will then be used in the SetPropertyValue function to set the value of the property correctly. UDT's: Flag, HierarchyId, Geography, Geometry
         /// 
         /// DO NOT REMOVE
         /// 
         /// </summary>
         public static readonly List<KeyValuePair<Type, TypeCode>> TypeCodes = new List<KeyValuePair<Type, TypeCode>>()
             {
-                // For Flag, HierarchyId, Geography, Geometry, and other non-primitive types, we will need to implement custom parsing logic in the SetPropertyValue function
                 new KeyValuePair<Type, TypeCode>(typeof(Boolean), TypeCode.Boolean),
                 new KeyValuePair<Type, TypeCode>(typeof(bool), TypeCode.Boolean),
                 new KeyValuePair<Type, TypeCode>(typeof(byte), TypeCode.Byte),
@@ -79,6 +79,6 @@ namespace JEO3.Data
                 new KeyValuePair<Type, TypeCode>(typeof(UInt64), TypeCode.UInt64)
             };
 
-		#endregion
-	}
+        #endregion
+    }
 }

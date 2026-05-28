@@ -6,6 +6,9 @@ using System.Text;
 
 namespace JEO3.Data.Extensions
 {
+    /// <summary>
+    /// DataRow Extensions
+    /// </summary>
     public static class DataRowExtensions
     {
         #region Reflection

@@ -6,6 +6,9 @@ using System.Text;
 
 namespace JEO3.Data.Extensions
 {
+    /// <summary>
+    /// DataColumn Extensions
+    /// </summary>
     public static class DataColumnExtensions
     {
         #region Helpers

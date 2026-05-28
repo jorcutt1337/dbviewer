@@ -19,6 +19,7 @@ namespace JEO3.SchemaEngine.Models
         public IReadOnlyList<SchemaRelation> RelationsUp { get; init; }
 
         #endregion
+
         #region Initialization
 
         public SchemaTable()

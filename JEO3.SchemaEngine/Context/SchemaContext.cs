@@ -13,7 +13,7 @@ namespace JEO3.SchemaEngine
 
         private string _ConnectionString { get; init; }
 
-        private bool _Loaded { get; set; } = false;
+        private bool isLoaded => Schema != null && Schema.Columns != null && Schema.Tables != null;
 
         #endregion
 
@@ -49,8 +49,6 @@ namespace JEO3.SchemaEngine
                 // Populate Schema Model
                 this.Schema = new SchemaModel(columns, relations);
 
-                _Loaded = true;
-
                 return true;
             }
             catch (Exception ex)
@@ -67,7 +65,7 @@ namespace JEO3.SchemaEngine
         public async Task<string> GenerateQuery(string tableName, QueryOptions options)
         {
             // Check Schema Loaded
-            if (_Loaded == false)
+            if (isLoaded == false)
             {
                 await this.LoadSchema();
             }
@@ -79,12 +77,16 @@ namespace JEO3.SchemaEngine
             // Track Time Elapsed To Build
             var startTime = DateTime.Now;
 
+            // Sanitize
+            var alias = options.DefaultTableAlias.Length > 0 ? options.DefaultTableAlias : "X";
+            alias = string.Join(string.Empty, alias.Except("!@#$%^&*()-=+/[]\\|`~,./?:;'{}".Select(v => v).AsEnumerable()));
+            alias = alias.TrimStart("0123456789".Select(v => v).ToArray());
+
             // Constants To Avoid Hardcoding
             const string TB = "\t";
             const string RN = "\r\n";
             const string RNT = RN + TB;
             const string FROM = "FROM ";
-            var alias = options.DefaultTableAlias.Length > 0 ? options.DefaultTableAlias : "X";
             var isSingleLine = options.PutTableSelectsSingleLinePerTable;
             var SLTT = (isSingleLine == false ? string.Empty : TB + TB);
 
@@ -96,6 +98,8 @@ namespace JEO3.SchemaEngine
             var relatedTableJoins = new List<string>();
             var relatedTableIndex = 2;
 
+            var querySegments = new List<QuerySegment>();
+
             if (options.LevelsUp >= 1)
             {
                 // Loop Parent Relationships With Inner Joins
@@ -106,11 +110,16 @@ namespace JEO3.SchemaEngine
                         .Distinct().ToList();
 
                     // Add Related Parent Table Join
-                    relatedTableJoins.Add(TB + "INNER JOIN " + key.PrimaryTableName + " X" + relatedTableIndex + " ON " + "X" + relatedTableIndex + "." + key.PrimaryColumnName + " = " + "X." + key.ForeignColumnName);
+                    var upJoin = TB + "INNER JOIN " + key.PrimaryTableName + " " + alias + relatedTableIndex + " ON " + alias + relatedTableIndex + "." + key.PrimaryColumnName + " = " + alias + "." + key.ForeignColumnName;
+                    relatedTableJoins.Add(upJoin);
 
                     // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
-                    relatedTableColumnsSelect += RN + SLTT + string.Join("," + (isSingleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (isSingleLine == false ? TB + TB : "") + "X" + relatedTableIndex + "." + x.ColumnName)) + ",";
+                    relatedTableColumnsSelect += RN + SLTT + string.Join("," + (isSingleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (isSingleLine == false ? TB + TB : "") + alias + relatedTableIndex + "." + x.ColumnName)) + ",";
                     relatedTableIndex++;
+
+
+                    var upSegment = new QuerySegment(key.PrimaryTableName, key.ForeignTableName, relatedTableColumnsSelect, upJoin); //, key.PrimaryTable, options.IncludeJoinTableSelects == false ? new List<SchemaColumn>() : relatedTableColumns.OrderBy(x => x.OrdinalPosition).ToList(), key.ForeignTable, new List<SchemaRelation>() { key });
+                    querySegments.Add(upSegment);
 
                     Debug.WriteLine($"Primary: {key.ForeignTableName}.{key.ForeignColumnName} -> Foreign: {key.PrimaryTableName}.{key.PrimaryColumnName}");
                 }
@@ -121,38 +130,45 @@ namespace JEO3.SchemaEngine
             if (options.LevelsDown >= 1)
             {
                 // Recursively Get Child Relationship Segments (Joins And Selects) To Specified Level Down
-                var segments = GetQueryRelationsDown(table, 0, options.LevelsDown, options);
+                var downSegments = GetQueryRelationsDown(table, 0, options.LevelsDown, options);
+                querySegments.AddRange(downSegments);
+
+
+
+                // HERE
+
+
 
                 // Keep Track Of Tables We've Already Added To The Query So We Can Alias Them Correctly When They Come Up Again In Deeper Relationships (e.g. Table A Joins To B Which Joins Back To A - We Don't Want To Alias The First A As X And The Second A As X2, We Want Both To Be X With The Correct Joins/Selects)
                 var newTables = new List<KeyValuePair<string, string>>() { new KeyValuePair<string, string>(table.TableName, alias) };
 
                 // Loop Child Relationships With Left Joins
-                foreach (var segment in segments)
+                foreach (var segment in downSegments)
                 {
                     // Validation - If Table Already Been Added As Join Then Don't Add Again, Just Alias In Joins/Selects (Prevents Circular Relationship Issues)
-                    if (segment.PrimaryTableName != table.TableName && !newTables.Any(v => v.Key == segment.PrimaryTableName))
+                    if (segment.PrimaryTable != table.TableName && !newTables.Any(v => v.Key == segment.PrimaryTable))
                     {
                         // Add Related Child Table Join
-                        newTables.Add(new KeyValuePair<string, string>(segment.PrimaryTableName, alias + (relatedTableIndex - 1)));
+                        newTables.Add(new KeyValuePair<string, string>(segment.PrimaryTable, alias + (relatedTableIndex - 1)));
                     }
 
                     // Replace Foreign Table Name Placeholder With Proper Foreign Table Alias In SELECT
-                    var updatedSelect = segment.Selects.Replace("[" + segment.ForeignTableName + "]", alias + relatedTableIndex);
+                    var updatedSelect = segment.Selects.Replace("[" + segment.ForeignTable + "]", alias + relatedTableIndex);
 
                     // Replace Primary Table Name Placeholder With Proper Primary Table Alias In SELECT
                     updatedSelect = updatedSelect.Replace("[" + table.TableName + "]", alias);
 
                     // Replace Foreign Table Name Placeholder With Proper Foreign Table Alias In JOIN
-                    var updatedJoin = segment.Joins.Replace("[" + segment.ForeignTableName + "]", alias + relatedTableIndex);
+                    var updatedJoin = segment.Joins.Replace("[" + segment.ForeignTable + "]", alias + relatedTableIndex);
 
                     // Check For Match In The List Were Tracking
-                    var match = newTables.FirstOrDefault(v => v.Key == segment.PrimaryTableName);
+                    var match = newTables.FirstOrDefault(v => v.Key == segment.PrimaryTable);
 
                     // Validation - If Primary Table Placeholder Exists
-                    if (match.Key == segment.PrimaryTableName && segment.Joins.Contains("[" + segment.PrimaryTableName + "]"))
+                    if (match.Key == segment.PrimaryTable && segment.Joins.Contains("[" + segment.PrimaryTable + "]"))
                     {
                         // Replace Primary Table Placeholder With Proper Primary Table Alias In JOIN
-                        updatedJoin = updatedJoin.Replace("[" + segment.PrimaryTableName + "]", match.Value);
+                        updatedJoin = updatedJoin.Replace("[" + segment.PrimaryTable + "]", match.Value);
                     }
 
                     relatedTableColumnsSelect += updatedSelect;
@@ -167,21 +183,30 @@ namespace JEO3.SchemaEngine
             // Get Primary Table Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects'
             var primaryColumns = table.Columns
                 // .Where(v => !SqlConstants.SqlNonPrimitiveDataTypes.Contains(v.DataType.ToUpper()))
-                .OrderBy(v => v.OrdinalPosition).Select(v => (isSingleLine == false ? TB + TB : " ") + "X." + v.ColumnName).Distinct().ToList();
+                .OrderBy(v => v.OrdinalPosition).Select(v => (isSingleLine == false ? TB + TB : " ") + alias + "." + v.ColumnName).Distinct().ToList();
+
+
+            var baseSelect = table.Columns.Query(isSingleLine, alias);
+            //var baseSelect = SLTT + String.Join("," + (isSingleLine == false ? RN : ""), primaryColumns);
+            var baseJoin = (options.GenerateTableJoins == true) ? RNT + FROM + table.TableName + " " + alias : RNT + FROM + table.TableName + " " + alias;
+            var baseSegment = new QuerySegment(table.TableName, string.Empty, baseSelect, baseJoin); //, table, table.Columns.OrderBy(v => v.OrdinalPosition).ToList(), null, null);
+            querySegments.Insert(0, baseSegment);
+
+            //var newQuery = GetQuery(querySegments, table, options);
 
             // If Auto-Generate Query Joins
             if (options.GenerateTableJoins == true)
             {
-                query += SLTT + String.Join("," + (isSingleLine == false ? RN : ""), primaryColumns) +
+                query += baseSelect +
                 (options.IncludeJoinTableSelects == false ? "" : (relatedTableColumnsSelect.Replace(RN, "").Length > 0 ? "," + relatedTableColumnsSelect.TrimEnd('\r').TrimEnd('\n').TrimEnd(',') : "")) +
-                RNT + FROM + table.TableName + " X" +
+                baseJoin +
                 RNT + string.Join(RNT, relatedTableJoins);
             }
             else
             {
                 query +=
-                SLTT + String.Join("," + (isSingleLine == false ? RN : ""), primaryColumns) +
-                RNT + FROM + table.TableName + " X";
+                SLTT + baseSelect +
+                baseJoin;
             }
 
             query = query + RNT + RNT;
@@ -252,8 +277,14 @@ namespace JEO3.SchemaEngine
                 // Append Related Table Columns Select Clause (Columns Separated By Comma Or Line Break Depending On Checkbox Option '1 Line Per Table Selects')
                 var selects = RN + SLTT + string.Join("," + (isSingleLine == false ? RN + SLTT : " "), relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(x => (isSingleLine == false ? TB + TB : "") + "[" + key.ForeignTableName + "]." + x.ColumnName)) + ",";
 
+
+                // DEBUG
+                //var selectCols = relatedTableColumns.OrderBy(x => x.OrdinalPosition).Select(v => new Mapping(v.TableName, v.ColumnName, v.DataType)).ToList();
+                //var allRelations = new List<SchemaRelation>() { key }.Concat(compositeOtherRelations).ToList();
+
+
                 // Add Query Segments To Return List
-                queries.Add(new QuerySegment(key.PrimaryTableName, key.ForeignTableName, selects, joins));
+                queries.Add(new QuerySegment(key.PrimaryTableName, key.ForeignTableName, selects, joins)); //, key.PrimaryColumn.Table, key.ForeignColumn.Table, new List<SchemaRelation>() { key }.Concat(compositeOtherRelations).ToList()));
                 currentLevel++;
                 Debug.WriteLine($"Main - Primary: {key.PrimaryTableName}.{key.PrimaryColumnName} -> Foreign: {key.ForeignTableName}.{key.ForeignColumnName} - Added");
 
@@ -268,7 +299,7 @@ namespace JEO3.SchemaEngine
                 var find = this.Schema.Tables.First(v => v.TableName == key.ForeignTableName);
 
                 // Validation - If Table Already Been Added As Join Then Don't Recurse Down That Path Again (Prevents Circular Relationship Issues)
-                if (queries.Any(v => v.PrimaryTableName == find.TableName)) { continue; }
+                if (queries.Any(v => v.PrimaryTable == find.TableName)) { continue; }
 
                 // Recursion - Get Next Level Down Relations
                 var nextLevelDownQueries = GetQueryRelationsDown(find, currentLevel, stopAfter, options, queries);
@@ -277,12 +308,12 @@ namespace JEO3.SchemaEngine
                 foreach (var query in nextLevelDownQueries)
                 {
                     // Validation?
-                    if (queries.Any(v => v.PrimaryTableName == query.PrimaryTableName && v.ForeignTableName == query.ForeignTableName))
+                    if (queries.Any(v => v.PrimaryTable == query.PrimaryTable && v.ForeignTable == query.ForeignTable))
                     {
                         //  Debug.WriteLine($"Primary: {query.PrimaryTableName} -> Foreign: {query.ForeignTableName} - Skipped. Already In Table");
                         continue;
                     }
-                    Debug.WriteLine($"Nested - Primary: {query.PrimaryTableName} -> Foreign: {query.ForeignTableName} - Adding");
+                    Debug.WriteLine($"Nested - Primary: {query.PrimaryTable} -> Foreign: {query.ForeignTable} - Adding");
                     queries.Add(query);
                 }
             }

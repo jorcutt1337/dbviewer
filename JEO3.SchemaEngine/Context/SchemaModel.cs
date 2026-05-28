@@ -13,9 +13,6 @@ namespace JEO3.SchemaEngine.Models
         [XmlIgnore]
         public IReadOnlyList<SchemaTable> Tables { get; set; }
 
-        //// TODO: Kill? Need For Deserialize
-        //public SchemaModel() { }
-
         public SchemaModel(IReadOnlyList<SchemaColumn> columns, IReadOnlyList<SchemaRelation> relations)
         {
             Columns = columns;
@@ -43,11 +40,11 @@ namespace JEO3.SchemaEngine.Models
                 column.Table = table;
             }
 
-            // Set Table Navigation Property For Each Column
+            // Set Table & Column Navigation Properties For Each Column
             var columnLookup = Columns.ToDictionary(v => (v.DatabaseName, v.TableName, v.ColumnName, v.DataType));
             foreach (var relation in relations)
             {
-                // Validation
+                // Validation - Bombs Away :)
                 if (!tableLookup.TryGetValue((relation.DatabaseName, relation.ForeignTableName), out var fTable))
                 {
                     throw new Exception($"Foreign Table not found for {relation.DatabaseName}.{relation.ForeignTableName}");
